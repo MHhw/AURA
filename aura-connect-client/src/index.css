@@ -72,13 +72,122 @@ body {
   box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
 }
 
+.page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.page__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.5rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  color: #0f172a;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(56, 189, 248, 0.35);
+  text-decoration: none;
+}
+
+.page__button--secondary {
+  background: rgba(148, 163, 184, 0.15);
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
 .page__status {
   margin: 0;
   font-size: 0.95rem;
   color: #64748b;
 }
-
 .page__status--error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.form-card {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background-color: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 25px 45px rgba(15, 23, 42, 0.08);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-field label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.form-field input {
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.form-actions button {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  color: #0f172a;
+  transition: opacity 0.2s ease;
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-actions__hint {
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.form-message {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.form-message--success {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.form-message--error {
   color: #b91c1c;
   font-weight: 600;
 }

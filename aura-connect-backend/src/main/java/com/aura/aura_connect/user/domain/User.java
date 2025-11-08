@@ -23,6 +23,9 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "password_hash")
+    private String password;
+
     private String profileImageUrl;
 
     @Enumerated(EnumType.STRING)
@@ -34,10 +37,19 @@ public class User {
     }
 
     public User(String email, String name, String profileImageUrl, SocialType socialType) {
+        this(email, name, null, profileImageUrl, socialType);
+    }
+
+    public User(String email, String name, String encodedPassword, String profileImageUrl, SocialType socialType) {
         this.email = email;
         this.name = name;
+        this.password = encodedPassword;
         this.profileImageUrl = profileImageUrl;
         this.socialType = socialType;
+    }
+
+    public static User createLocalUser(String email, String name, String encodedPassword) {
+        return new User(email, name, encodedPassword, null, SocialType.LOCAL);
     }
 
     public Long getId() {
@@ -52,11 +64,23 @@ public class User {
         return name;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     public String getProfileImageUrl() {
         return profileImageUrl;
     }
 
     public SocialType getSocialType() {
         return socialType;
+    }
+
+    public boolean isLocalAccount() {
+        return socialType == null || socialType == SocialType.LOCAL;
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 }

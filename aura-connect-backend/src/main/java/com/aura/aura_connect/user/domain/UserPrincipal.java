@@ -14,6 +14,18 @@ public class UserPrincipal implements UserDetails {
     private final String name;
     private final String profileImageUrl;
     private final SocialType socialType;
+    private final String password;
+
+    public static UserPrincipal from(User user) {
+        return UserPrincipal.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .profileImageUrl(user.getProfileImageUrl())
+                .socialType(user.getSocialType())
+                .password(user.getPassword())
+                .build();
+    }
 
     public Long getId() {
         return id;
@@ -42,7 +54,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return password;
     }
 
     @Override
