@@ -3,6 +3,7 @@ package com.aura.aura_connect.config;
 import com.aura.aura_connect.security.jwt.JwtAuthenticationFilter;
 import com.aura.aura_connect.security.oauth.CustomOAuth2UserService;
 import com.aura.aura_connect.security.oauth.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.aura.aura_connect.security.oauth.OAuth2AuthenticationSuccessHandler;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,7 +46,8 @@ public class SecurityConfig {
                                 .baseUri("/oauth2/authorization")
                                 .authorizationRequestRepository(authorizationRequestRepository()))
                         .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/*"))
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)))
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2AuthenticationSuccessHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
