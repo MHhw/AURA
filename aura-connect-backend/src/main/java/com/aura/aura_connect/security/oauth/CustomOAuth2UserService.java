@@ -1,6 +1,5 @@
 package com.aura.aura_connect.security.oauth;
 
-import com.aura.aura_connect.user.domain.SocialType;
 import com.aura.aura_connect.user.domain.User;
 import com.aura.aura_connect.user.domain.repository.UserRepository;
 import java.util.Collection;
@@ -69,11 +68,29 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private User findOrCreateUser(OAuth2UserProfile profile) {
         Optional<User> existingUser = userRepository.findByEmail(profile.email());
-        return existingUser.orElseGet(() -> userRepository.save(createSocialUser(profile)));
+        return existingUser
+                .map(user -> updateSocialUser(user, profile))
+                .orElseGet(() -> userRepository.save(createSocialUser(profile)));
     }
 
     private User createSocialUser(OAuth2UserProfile profile) {
-        SocialType socialType = profile.socialType();
-        return new User(profile.email(), profile.name(), null, socialType);
+        return User.createSocialUser(
+                profile.email(),
+                profile.name(),
+                profile.providerId(),
+                null,
+                profile.socialType());
+    }
+
+    private User updateSocialUser(User user, OAuth2UserProfile profile) {
+        if (!profile.socialType().equals(user.getSocialType())) {
+            user.updateSocialAccount(profile.socialType(), profile.providerId(), null);
+            return userRepository.save(user);
+        }
+        if (user.getProviderId() == null && profile.providerId() != null) {
+            user.updateSocialAccount(profile.socialType(), profile.providerId(), null);
+            return userRepository.save(user);
+        }
+        return user;
     }
 }
