@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import httpClient from '../lib/httpClient'
 
@@ -31,6 +31,15 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const socialProviders = useMemo(
+    () => [
+      { label: '구글로 로그인', provider: 'google' },
+      { label: '카카오로 로그인', provider: 'kakao' },
+      { label: '네이버로 로그인', provider: 'naver' },
+    ],
+    [],
+  )
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
     setForm((prev) => ({ ...prev, [name]: value }))
@@ -52,6 +61,11 @@ const LoginPage = () => {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleSocialLogin = (provider: string) => {
+    const backendBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+    window.location.href = `${backendBaseUrl}/oauth2/authorization/${provider}`
   }
 
   return (
@@ -101,6 +115,23 @@ const LoginPage = () => {
         {success && <p className="form-message form-message--success">{success}</p>}
         {error && <p className="form-message form-message--error">{error}</p>}
       </form>
+
+      <div className="form-card" aria-label="소셜 로그인 옵션">
+        <h2 className="form-card__title">간편 로그인</h2>
+        <p className="form-card__description">선호하는 소셜 계정으로 빠르게 로그인하세요.</p>
+        <div className="form-actions form-actions--vertical">
+          {socialProviders.map(({ label, provider }) => (
+            <button
+              key={provider}
+              type="button"
+              onClick={() => handleSocialLogin(provider)}
+              className="button button--secondary"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }
