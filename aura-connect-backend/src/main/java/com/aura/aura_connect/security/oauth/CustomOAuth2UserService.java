@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -14,28 +16,22 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2UserService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-    private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
-
+    
+    @Autowired
     public CustomOAuth2UserService(UserRepository userRepository) {
-        this(userRepository, new DefaultOAuth2UserService());
-    }
-
-    CustomOAuth2UserService(
-            UserRepository userRepository, OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate) {
         this.userRepository = userRepository;
-        this.delegate = delegate;
     }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = delegate.loadUser(userRequest);
+        OAuth2User oAuth2User = super.loadUser(userRequest);
+        
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2UserProfile profile = OAuth2UserProfile.from(registrationId, oAuth2User.getAttributes());
 
