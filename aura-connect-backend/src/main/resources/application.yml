@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: aura-connect
   datasource:
@@ -64,9 +66,29 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
-jwt:
-  secret: ${JWT_SECRET:please-change-this-secret-key-value-which-is-long-enough}
-  access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}
-  refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
-  access-token-cookie-name: ${JWT_ACCESS_TOKEN_COOKIE_NAME:ACCESS_TOKEN}
-  refresh-token-cookie-name: ${JWT_REFRESH_TOKEN_COOKIE_NAME:REFRESH_TOKEN}
+  jwt:
+    secret: ${JWT_SECRET:please-change-this-secret-key-value-which-is-long-enough}
+    access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}
+    refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
+    access-token-cookie-name: ${JWT_ACCESS_TOKEN_COOKIE_NAME:ACCESS_TOKEN}
+    refresh-token-cookie-name: ${JWT_REFRESH_TOKEN_COOKIE_NAME:REFRESH_TOKEN}
+cors:
+  allow-credentials: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+cors:
+  allowed-origins:
+    - http://localhost:5173
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+cors:
+  allowed-origins:
+    - https://app.aura.com

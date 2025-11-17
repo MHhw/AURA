@@ -16,6 +16,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
     private static final String OAUTH2_AUTH_REQUEST_COOKIE_NAME = "OAUTH2_AUTH_REQUEST";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
+    private static final String SAME_SITE_ATTRIBUTE = "SameSite";
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -39,6 +40,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
+        configureCookieSecurity(cookie, request.isSecure());
         response.addCookie(cookie);
     }
 
@@ -75,8 +77,18 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
                 Cookie deleteCookie = new Cookie(cookie.getName(), null);
                 deleteCookie.setPath("/");
                 deleteCookie.setMaxAge(0);
+                configureCookieSecurity(deleteCookie, request.isSecure());
                 response.addCookie(deleteCookie);
             }
+        }
+    }
+
+    private void configureCookieSecurity(Cookie cookie, boolean secureRequest) {
+        cookie.setSecure(secureRequest);
+        if (secureRequest) {
+            cookie.setAttribute(SAME_SITE_ATTRIBUTE, "None");
+        } else {
+            cookie.setAttribute(SAME_SITE_ATTRIBUTE, "Lax");
         }
     }
 
