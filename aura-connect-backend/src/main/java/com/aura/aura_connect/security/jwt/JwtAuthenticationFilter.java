@@ -19,10 +19,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenProvider tokenProvider;
     private final JwtProperties jwtProperties;
+    private final CookieUtils cookieUtils;
 
-    public JwtAuthenticationFilter(TokenProvider tokenProvider, JwtProperties jwtProperties) {
+    public JwtAuthenticationFilter(TokenProvider tokenProvider, JwtProperties jwtProperties, CookieUtils cookieUtils) {
         this.tokenProvider = tokenProvider;
         this.jwtProperties = jwtProperties;
+        this.cookieUtils = cookieUtils;
     }
 
     @Override
@@ -45,6 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return authorizationHeader.substring(BEARER_PREFIX.length());
         }
 
-        return CookieUtils.getCookieValue(request, jwtProperties.accessTokenCookieName()).orElse(null);
+        return cookieUtils.getCookieValue(request, jwtProperties.accessTokenCookieName()).orElse(null);
     }
 }

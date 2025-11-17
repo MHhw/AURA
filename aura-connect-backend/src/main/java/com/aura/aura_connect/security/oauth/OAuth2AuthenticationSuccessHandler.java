@@ -1,6 +1,7 @@
 package com.aura.aura_connect.security.oauth;
 
 import com.aura.aura_connect.security.jwt.CookieUtils;
+import com.aura.aura_connect.security.jwt.CookieUtils;
 import com.aura.aura_connect.security.jwt.RefreshTokenStore;
 import com.aura.aura_connect.security.jwt.TokenProvider;
 import com.aura.aura_connect.security.jwt.config.JwtProperties;
@@ -25,12 +26,17 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private final TokenProvider tokenProvider;
     private final RefreshTokenStore refreshTokenStore;
     private final JwtProperties jwtProperties;
+    private final CookieUtils cookieUtils;
 
     public OAuth2AuthenticationSuccessHandler(
-            TokenProvider tokenProvider, RefreshTokenStore refreshTokenStore, JwtProperties jwtProperties) {
+            TokenProvider tokenProvider,
+            RefreshTokenStore refreshTokenStore,
+            JwtProperties jwtProperties,
+            CookieUtils cookieUtils) {
         this.tokenProvider = tokenProvider;
         this.refreshTokenStore = refreshTokenStore;
         this.jwtProperties = jwtProperties;
+        this.cookieUtils = cookieUtils;
     }
 
     @Override
@@ -45,12 +51,12 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         refreshTokenStore.save(
                 principal.getId(), refreshToken, Duration.ofSeconds(jwtProperties.refreshTokenValiditySeconds()));
 
-        CookieUtils.addHttpOnlyCookie(
+        cookieUtils.addHttpOnlyCookie(
                 response,
                 jwtProperties.accessTokenCookieName(),
                 accessToken,
                 jwtProperties.accessTokenValiditySeconds());
-        CookieUtils.addHttpOnlyCookie(
+        cookieUtils.addHttpOnlyCookie(
                 response,
                 jwtProperties.refreshTokenCookieName(),
                 refreshToken,
