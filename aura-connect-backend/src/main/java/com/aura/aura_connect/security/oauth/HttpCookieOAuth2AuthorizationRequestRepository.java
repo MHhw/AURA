@@ -5,12 +5,16 @@ import com.aura.aura_connect.security.oauth.config.OAuth2CookieProperties;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.Optional;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.SerializationUtils;
 import org.springframework.util.StringUtils;
 
 @Component
@@ -104,12 +108,22 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
     }
 
     private String serialize(OAuth2AuthorizationRequest authorizationRequest) {
-        byte[] serialized = SerializationUtils.serialize(authorizationRequest);
-        return Base64.getUrlEncoder().encodeToString(serialized);
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
+            objectOutputStream.writeObject(authorizationRequest);
+            return Base64.getUrlEncoder().encodeToString(byteArrayOutputStream.toByteArray());
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to serialize OAuth2 authorization request", ex);
+        }
     }
 
     private OAuth2AuthorizationRequest deserialize(String value) {
         byte[] bytes = Base64.getUrlDecoder().decode(value);
-        return (OAuth2AuthorizationRequest) SerializationUtils.deserialize(bytes);
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+                ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
+            return (OAuth2AuthorizationRequest) objectInputStream.readObject();
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new IllegalStateException("Failed to deserialize OAuth2 authorization request", ex);
+        }
     }
 }
