@@ -1,5 +1,7 @@
 package com.aura.aura_connect.security.oauth;
 
+import com.aura.aura_connect.security.config.CookieSecurityProperties;
+import com.aura.aura_connect.security.oauth.config.OAuth2CookieProperties;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,14 +11,24 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
+import org.springframework.util.StringUtils;
 
 @Component
 public class HttpCookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
-    private static final String OAUTH2_AUTH_REQUEST_COOKIE_NAME = "OAUTH2_AUTH_REQUEST";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
     private static final String SAME_SITE_ATTRIBUTE = "SameSite";
+
+    private final CookieSecurityProperties cookieSecurityProperties;
+    private final OAuth2CookieProperties oAuth2CookieProperties;
+
+    public HttpCookieOAuth2AuthorizationRequestRepository(
+            CookieSecurityProperties cookieSecurityProperties,
+            OAuth2CookieProperties oAuth2CookieProperties) {
+        this.cookieSecurityProperties = cookieSecurityProperties;
+        this.oAuth2CookieProperties = oAuth2CookieProperties;
+    }
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -36,11 +48,9 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         }
 
         String cookieValue = serialize(authorizationRequest);
-        Cookie cookie = new Cookie(OAUTH2_AUTH_REQUEST_COOKIE_NAME, cookieValue);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        Cookie cookie = new Cookie(oAuth2CookieProperties.authorizationRequestCookieName(), cookieValue);
         cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
-        configureCookieSecurity(cookie, request.isSecure());
+        configureCookieSecurity(cookie);
         response.addCookie(cookie);
     }
 
@@ -59,7 +69,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         }
 
         for (Cookie cookie : cookies) {
-            if (OAUTH2_AUTH_REQUEST_COOKIE_NAME.equals(cookie.getName())) {
+            if (oAuth2CookieProperties.authorizationRequestCookieName().equals(cookie.getName())) {
                 return Optional.of(cookie);
             }
         }
@@ -73,23 +83,24 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         }
 
         for (Cookie cookie : cookies) {
-            if (OAUTH2_AUTH_REQUEST_COOKIE_NAME.equals(cookie.getName())) {
+            if (oAuth2CookieProperties.authorizationRequestCookieName().equals(cookie.getName())) {
                 Cookie deleteCookie = new Cookie(cookie.getName(), null);
-                deleteCookie.setPath("/");
                 deleteCookie.setMaxAge(0);
-                configureCookieSecurity(deleteCookie, request.isSecure());
+                configureCookieSecurity(deleteCookie);
                 response.addCookie(deleteCookie);
             }
         }
     }
 
-    private void configureCookieSecurity(Cookie cookie, boolean secureRequest) {
-        cookie.setSecure(secureRequest);
-        if (secureRequest) {
-            cookie.setAttribute(SAME_SITE_ATTRIBUTE, "None");
-        } else {
-            cookie.setAttribute(SAME_SITE_ATTRIBUTE, "Lax");
+    private void configureCookieSecurity(Cookie cookie) {
+        cookie.setHttpOnly(true);
+        cookie.setSecure(cookieSecurityProperties.secure());
+        // Secure cookies are transmitted only via HTTPS connections; browsers drop them on HTTP.
+        cookie.setPath(cookieSecurityProperties.path());
+        if (StringUtils.hasText(cookieSecurityProperties.domain())) {
+            cookie.setDomain(cookieSecurityProperties.domain());
         }
+        cookie.setAttribute(SAME_SITE_ATTRIBUTE, cookieSecurityProperties.sameSite().attributeValue());
     }
 
     private String serialize(OAuth2AuthorizationRequest authorizationRequest) {

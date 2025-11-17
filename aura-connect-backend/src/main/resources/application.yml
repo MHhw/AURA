@@ -66,6 +66,15 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+security:
+  cookie:
+    domain: ${COOKIE_DOMAIN:}
+    path: ${COOKIE_PATH:/}
+    same-site: ${COOKIE_SAME_SITE:LAX}
+    secure: ${COOKIE_SECURE:true}
+oauth2:
+  cookie:
+    authorization-request-cookie-name: ${OAUTH2_AUTH_REQUEST_COOKIE_NAME:OAUTH2_AUTH_REQUEST}
   jwt:
     secret: ${JWT_SECRET:please-change-this-secret-key-value-which-is-long-enough}
     access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}

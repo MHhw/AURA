@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.aura.aura_connect.security.config.CookieSecurityProperties;
+import com.aura.aura_connect.security.jwt.CookieUtils;
 import com.aura.aura_connect.security.jwt.RefreshTokenStore;
 import com.aura.aura_connect.security.jwt.TokenProvider;
 import com.aura.aura_connect.security.jwt.config.JwtProperties;
@@ -38,6 +40,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
 
     private OAuth2AuthenticationSuccessHandler successHandler;
     private JwtProperties jwtProperties;
+    private CookieUtils cookieUtils;
 
     @BeforeEach
     void setUp() {
@@ -47,7 +50,11 @@ class OAuth2AuthenticationSuccessHandlerTest {
                 1209600,
                 "ACCESS_TOKEN",
                 "REFRESH_TOKEN");
-        successHandler = new OAuth2AuthenticationSuccessHandler(tokenProvider, refreshTokenStore, jwtProperties);
+        CookieSecurityProperties cookieSecurityProperties =
+                new CookieSecurityProperties("example.com", "/", CookieSecurityProperties.SameSitePolicy.LAX, true);
+        cookieUtils = new CookieUtils(cookieSecurityProperties);
+        successHandler =
+                new OAuth2AuthenticationSuccessHandler(tokenProvider, refreshTokenStore, jwtProperties, cookieUtils);
     }
 
     @Test
@@ -86,6 +93,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
                     assertThat(header).contains("HttpOnly");
                     assertThat(header).contains("Secure");
                     assertThat(header).contains("SameSite=Lax");
+                    assertThat(header).contains("Domain=example.com");
                 });
 
         assertThat(response.getRedirectedUrl()).isEqualTo("/oauth/success");
