@@ -3,10 +3,11 @@ package com.aura.aura_connect.security.jwt;
 import com.aura.aura_connect.security.jwt.config.JwtProperties;
 import com.aura.aura_connect.user.domain.SocialType;
 import com.aura.aura_connect.user.domain.UserPrincipal;
+import static io.jsonwebtoken.Jwts.SIG;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -39,14 +40,14 @@ public class TokenProvider {
         SocialType socialType = principal.getSocialType() != null ? principal.getSocialType() : SocialType.UNKNOWN;
 
         return Jwts.builder()
-                .setSubject(String.valueOf(principal.getId()))
+                .subject(String.valueOf(principal.getId()))
                 .claim(EMAIL_CLAIM, principal.getEmail())
                 .claim(NAME_CLAIM, principal.getName())
                 .claim(PROFILE_IMAGE_CLAIM, principal.getProfileImageUrl())
                 .claim(SOCIAL_TYPE_CLAIM, socialType.name())
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(expiry))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(secretKey, SIG.HS256)
                 .compact();
     }
 
@@ -55,10 +56,10 @@ public class TokenProvider {
         Instant expiry = now.plusSeconds(jwtProperties.refreshTokenValiditySeconds());
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(expiry))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .subject(String.valueOf(userId))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(secretKey, SIG.HS256)
                 .compact();
     }
 
@@ -72,7 +73,7 @@ public class TokenProvider {
     }
 
     public Authentication getAuthentication(String token) {
-        Claims claims = parseClaims(token).getBody();
+        Claims claims = parseClaims(token).getPayload();
 
         String socialTypeValue = claims.get(SOCIAL_TYPE_CLAIM, String.class);
         SocialType socialType = toSocialType(socialTypeValue);
@@ -89,7 +90,7 @@ public class TokenProvider {
     }
 
     public Long getUserId(String token) {
-        Claims claims = parseClaims(token).getBody();
+        Claims claims = parseClaims(token).getPayload();
         return Long.parseLong(claims.getSubject());
     }
 
