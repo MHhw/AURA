@@ -74,8 +74,8 @@ security:
     secure: ${COOKIE_SECURE:true}
 oauth2:
   cookie:
-    authorization-request-cookie-name: ${OAUTH2_AUTH_REQUEST_COOKIE_NAME:OAUTH2_AUTH_REQUEST}
-  jwt:
+    authorization-request-cookie-name: ${OAUTH2_AUTH_REQUEST_COOKIE_NAME:OAUTH2_AUTH_REQUEST}  
+jwt:
     secret: ${JWT_SECRET:please-change-this-secret-key-value-which-is-long-enough}
     access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}
     refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}

@@ -4,6 +4,8 @@ import com.aura.aura_connect.security.jwt.JwtAuthenticationFilter;
 import com.aura.aura_connect.security.oauth.CustomOAuth2UserService;
 import com.aura.aura_connect.security.oauth.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,6 +28,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Qualifier("corsConfigurationSource")
     private final CorsConfigurationSource corsConfigurationSource;
     private final AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
 
