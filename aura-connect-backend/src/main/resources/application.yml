@@ -67,22 +67,26 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 security:
+  # Custom prefix bound via CookieSecurityProperties; IDE "Unknown property" warnings are safe to ignore.
   cookie:
     domain: ${COOKIE_DOMAIN:}
     path: ${COOKIE_PATH:/}
-    same-site: ${COOKIE_SAME_SITE:LAX}
+    'same-site': ${COOKIE_SAME_SITE:LAX}
     secure: ${COOKIE_SECURE:true}
 oauth2:
+  # Custom prefix bound via OAuth2CookieProperties; IDE warnings can be ignored.
   cookie:
-    authorization-request-cookie-name: ${OAUTH2_AUTH_REQUEST_COOKIE_NAME:OAUTH2_AUTH_REQUEST}  
+    'authorization-request-cookie-name': ${OAUTH2_AUTH_REQUEST_COOKIE_NAME:OAUTH2_AUTH_REQUEST}
 jwt:
+    # Custom prefix bound via JwtProperties; IDE warnings can be ignored.
     secret: ${JWT_SECRET:please-change-this-secret-key-value-which-is-long-enough}
-    access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}
-    refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
-    access-token-cookie-name: ${JWT_ACCESS_TOKEN_COOKIE_NAME:ACCESS_TOKEN}
-    refresh-token-cookie-name: ${JWT_REFRESH_TOKEN_COOKIE_NAME:REFRESH_TOKEN}
+    'access-token-validity-seconds': ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}
+    'refresh-token-validity-seconds': ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
+    'access-token-cookie-name': ${JWT_ACCESS_TOKEN_COOKIE_NAME:ACCESS_TOKEN}
+    'refresh-token-cookie-name': ${JWT_REFRESH_TOKEN_COOKIE_NAME:REFRESH_TOKEN}
 cors:
-  allow-credentials: true
+  # Custom prefix bound via CorsProperties; IDE warnings can be ignored.
+  'allow-credentials': true
 
 ---
 spring:
@@ -90,6 +94,7 @@ spring:
     activate:
       on-profile: dev
 cors:
+  # Same custom prefix as above; IDE warnings can be ignored.
   allowed-origins:
     - http://localhost:5173
 
@@ -99,5 +104,6 @@ spring:
     activate:
       on-profile: prod
 cors:
+  # Same custom prefix as above; IDE warnings can be ignored.
   allowed-origins:
     - https://app.aura.com
