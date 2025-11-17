@@ -9,6 +9,7 @@ public record OAuth2UserProfile(
         String providerId,
         String email,
         String name,
+        String profileImageUrl,
         SocialType socialType) {
 
     public static OAuth2UserProfile from(String registrationId, Map<String, Object> attributes) {
@@ -27,7 +28,8 @@ public record OAuth2UserProfile(
         String providerId = (String) attributes.get("sub");
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
-        return new OAuth2UserProfile(providerId, email, name, SocialType.GOOGLE);
+        String picture = (String) attributes.get("picture");
+        return new OAuth2UserProfile(providerId, email, name, picture, SocialType.GOOGLE);
     }
 
     @SuppressWarnings("unchecked")
@@ -38,7 +40,8 @@ public record OAuth2UserProfile(
         String email = account != null ? (String) account.get("email") : null;
         Map<String, Object> profile = account != null ? (Map<String, Object>) account.get("profile") : null;
         String name = profile != null ? (String) profile.get("nickname") : null;
-        return new OAuth2UserProfile(providerId, email, name, SocialType.KAKAO);
+        String profileImageUrl = profile != null ? (String) profile.get("profile_image_url") : null;
+        return new OAuth2UserProfile(providerId, email, name, profileImageUrl, SocialType.KAKAO);
     }
 
     @SuppressWarnings("unchecked")
@@ -50,6 +53,7 @@ public record OAuth2UserProfile(
         String providerId = (String) response.get("id");
         String email = (String) response.get("email");
         String name = (String) response.get("name");
-        return new OAuth2UserProfile(providerId, email, name, SocialType.NAVER);
+        String profileImageUrl = (String) response.get("profile_image");
+        return new OAuth2UserProfile(providerId, email, name, profileImageUrl, SocialType.NAVER);
     }
 }
