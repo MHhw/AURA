@@ -1,37 +1,36 @@
 package com.aura.aura_connect.security.oauth;
 
-import com.aura.aura_connect.security.jwt.JwtTokenProvider;
+import com.aura.aura_connect.security.jwt.CookieUtils;
+import com.aura.aura_connect.security.jwt.RefreshTokenStore;
+import com.aura.aura_connect.security.jwt.TokenProvider;
+import com.aura.aura_connect.security.jwt.config.JwtProperties;
 import com.aura.aura_connect.user.domain.SocialType;
 import com.aura.aura_connect.user.domain.UserPrincipal;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
+import java.time.Duration;
 import java.util.Map;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    private static final String REDIRECT_URI_PARAMETER = "redirect_uri";
-
-    private final JwtTokenProvider jwtTokenProvider;
-    private final ObjectMapper objectMapper;
+    private final TokenProvider tokenProvider;
+    private final RefreshTokenStore refreshTokenStore;
+    private final JwtProperties jwtProperties;
 
     public OAuth2AuthenticationSuccessHandler(
-            JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.objectMapper = objectMapper;
+            TokenProvider tokenProvider, RefreshTokenStore refreshTokenStore, JwtProperties jwtProperties) {
+        this.tokenProvider = tokenProvider;
+        this.refreshTokenStore = refreshTokenStore;
+        this.jwtProperties = jwtProperties;
     }
 
     @Override
@@ -40,15 +39,24 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
         UserPrincipal principal = resolvePrincipal(authentication);
-        String accessToken = jwtTokenProvider.generateAccessToken(principal);
+        String accessToken = tokenProvider.generateAccessToken(principal);
+        String refreshToken = tokenProvider.generateRefreshToken(principal.getId());
 
-        String redirectUri = request.getParameter(REDIRECT_URI_PARAMETER);
-        if (StringUtils.hasText(redirectUri)) {
-            handleRedirectResponse(response, redirectUri, accessToken, principal);
-            return;
-        }
+        refreshTokenStore.save(
+                principal.getId(), refreshToken, Duration.ofSeconds(jwtProperties.refreshTokenValiditySeconds()));
 
-        handleJsonResponse(response, accessToken, principal);
+        CookieUtils.addHttpOnlyCookie(
+                response,
+                jwtProperties.accessTokenCookieName(),
+                accessToken,
+                jwtProperties.accessTokenValiditySeconds());
+        CookieUtils.addHttpOnlyCookie(
+                response,
+                jwtProperties.refreshTokenCookieName(),
+                refreshToken,
+                jwtProperties.refreshTokenValiditySeconds());
+
+        response.sendRedirect("/oauth/success");
     }
 
     private UserPrincipal resolvePrincipal(Authentication authentication) {
@@ -150,43 +158,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         } catch (IllegalArgumentException ex) {
             return SocialType.UNKNOWN;
         }
-    }
-
-    private void handleRedirectResponse(
-            HttpServletResponse response,
-            String redirectUri,
-            String accessToken,
-            UserPrincipal principal) throws IOException {
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("token", accessToken)
-                .queryParam("id", principal.getId())
-                .queryParam("email", principal.getEmail())
-                .queryParam("socialType", principal.getSocialType())
-                .build()
-                .toUriString();
-
-        response.sendRedirect(targetUrl);
-    }
-
-    private void handleJsonResponse(HttpServletResponse response, String accessToken, UserPrincipal principal)
-            throws IOException {
-        Map<String, Object> userPayload = new LinkedHashMap<>();
-        userPayload.put("id", principal.getId());
-        userPayload.put("email", principal.getEmail());
-        userPayload.put("name", principal.getName());
-        userPayload.put("profileImageUrl", principal.getProfileImageUrl());
-        userPayload.put("socialType", principal.getSocialType());
-
-        Map<String, Object> responsePayload = new LinkedHashMap<>();
-        responsePayload.put("accessToken", accessToken);
-        responsePayload.put("user", userPayload);
-
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        String body = objectMapper.writeValueAsString(responsePayload);
-        response.getWriter().write(body);
-        response.getWriter().flush();
     }
 
     private String asString(Object value) {

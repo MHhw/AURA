@@ -6,6 +6,10 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/aura}
     username: ${SPRING_DATASOURCE_USERNAME:aura}
     password: ${SPRING_DATASOURCE_PASSWORD:aura}
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
   security:
     oauth2:
       client:
@@ -63,3 +67,6 @@ logging:
 jwt:
   secret: ${JWT_SECRET:please-change-this-secret-key-value-which-is-long-enough}
   access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:3600}
+  refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
+  access-token-cookie-name: ${JWT_ACCESS_TOKEN_COOKIE_NAME:ACCESS_TOKEN}
+  refresh-token-cookie-name: ${JWT_REFRESH_TOKEN_COOKIE_NAME:REFRESH_TOKEN}

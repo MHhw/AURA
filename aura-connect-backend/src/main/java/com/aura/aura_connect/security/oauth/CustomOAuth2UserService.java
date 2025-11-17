@@ -65,7 +65,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private User findOrCreateUser(OAuth2UserProfile profile) {
         Optional<User> existingUser = userRepository.findByEmail(profile.email());
         return existingUser
-                .map(user -> updateSocialUser(user, profile))
+                .map(user -> {
+                    if (user.isLocalAccount()) {
+                        // Local 회원의 계정 정보는 소셜 로그인으로 덮어쓰지 않는다.
+                        return user;
+                    }
+                    return updateSocialUser(user, profile);
+                })
                 .orElseGet(() -> userRepository.save(createSocialUser(profile)));
     }
 

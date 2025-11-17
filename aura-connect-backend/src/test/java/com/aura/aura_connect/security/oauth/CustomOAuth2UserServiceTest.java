@@ -56,10 +56,10 @@ class CustomOAuth2UserServiceTest {
 
         @Test
         void loadUser_kakaoProviderReusesExistingUser() throws Exception {
-                // given
-                User existingUser = new User("kakao@example.com", "Existing", null, SocialType.KAKAO);
-                UserRepository userRepository = mock(UserRepository.class);
-                when(userRepository.findByEmail("kakao@example.com")).thenReturn(Optional.of(existingUser));
+            // given
+            User existingUser = new User("kakao@example.com", "Existing", null, SocialType.KAKAO);
+            UserRepository userRepository = mock(UserRepository.class);
+            when(userRepository.findByEmail("kakao@example.com")).thenReturn(Optional.of(existingUser));
 
                 CustomOAuth2UserService service = new CustomOAuth2UserService(userRepository);
 
@@ -78,6 +78,31 @@ class CustomOAuth2UserServiceTest {
                 method.invoke(service, profile);
 
                 // then: 기존 유저 재사용이므로 save 호출 X
+                verify(userRepository, never()).save(any(User.class));
+        }
+
+        @Test
+        void loadUser_doesNotOverrideLocalAccount() throws Exception {
+                // given
+                User existingLocalUser = User.createLocalUser("local@example.com", "Local", "encoded");
+                UserRepository userRepository = mock(UserRepository.class);
+                when(userRepository.findByEmail("local@example.com")).thenReturn(Optional.of(existingLocalUser));
+
+                CustomOAuth2UserService service = new CustomOAuth2UserService(userRepository);
+
+                Map<String, Object> attributes = Map.of(
+                                "sub", "google-321",
+                                "email", "local@example.com",
+                                "name", "Social User");
+
+                OAuth2UserProfile profile = OAuth2UserProfile.from("google", attributes);
+
+                Method method = CustomOAuth2UserService.class
+                                .getDeclaredMethod("findOrCreateUser", OAuth2UserProfile.class);
+                method.setAccessible(true);
+                method.invoke(service, profile);
+
+                // then: 기존 LOCAL 계정은 소셜 정보로 업데이트하지 않는다
                 verify(userRepository, never()).save(any(User.class));
         }
 

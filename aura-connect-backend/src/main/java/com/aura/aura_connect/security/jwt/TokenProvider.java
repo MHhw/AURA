@@ -17,7 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JwtTokenProvider {
+public class TokenProvider {
 
     private static final String EMAIL_CLAIM = "email";
     private static final String NAME_CLAIM = "name";
@@ -27,7 +27,7 @@ public class JwtTokenProvider {
     private final JwtProperties jwtProperties;
     private final SecretKey secretKey;
 
-    public JwtTokenProvider(JwtProperties jwtProperties) {
+    public TokenProvider(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
     }
@@ -44,6 +44,18 @@ public class JwtTokenProvider {
                 .claim(NAME_CLAIM, principal.getName())
                 .claim(PROFILE_IMAGE_CLAIM, principal.getProfileImageUrl())
                 .claim(SOCIAL_TYPE_CLAIM, socialType.name())
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(expiry))
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(Long userId) {
+        Instant now = Instant.now();
+        Instant expiry = now.plusSeconds(jwtProperties.refreshTokenValiditySeconds());
+
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiry))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -74,6 +86,11 @@ public class JwtTokenProvider {
                 .build();
 
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
+    }
+
+    public Long getUserId(String token) {
+        Claims claims = parseClaims(token).getBody();
+        return Long.parseLong(claims.getSubject());
     }
 
     private Jws<Claims> parseClaims(String token) {
