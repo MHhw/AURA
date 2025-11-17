@@ -1,5 +1,6 @@
 package com.aura.aura_connect.security.jwt;
 
+import com.aura.aura_connect.security.jwt.config.JwtProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,31 +17,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenProvider tokenProvider;
+    private final JwtProperties jwtProperties;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    public JwtAuthenticationFilter(TokenProvider tokenProvider, JwtProperties jwtProperties) {
+        this.tokenProvider = tokenProvider;
+        this.jwtProperties = jwtProperties;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String token = resolveToken(request.getHeader(HttpHeaders.AUTHORIZATION));
+        String token = resolveToken(request);
 
         if (StringUtils.hasText(token)
-                && jwtTokenProvider.validateToken(token)
+                && tokenProvider.validateToken(token)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
-            SecurityContextHolder.getContext().setAuthentication(jwtTokenProvider.getAuthentication(token));
+            SecurityContextHolder.getContext().setAuthentication(tokenProvider.getAuthentication(token));
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String resolveToken(String authorizationHeader) {
-        if (!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith(BEARER_PREFIX)) {
-            return null;
+    private String resolveToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith(BEARER_PREFIX)) {
+            return authorizationHeader.substring(BEARER_PREFIX.length());
         }
 
-        return authorizationHeader.substring(BEARER_PREFIX.length());
+        return CookieUtils.getCookieValue(request, jwtProperties.accessTokenCookieName()).orElse(null);
     }
 }

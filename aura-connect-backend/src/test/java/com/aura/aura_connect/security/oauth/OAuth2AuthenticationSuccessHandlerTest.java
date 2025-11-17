@@ -1,26 +1,29 @@
 package com.aura.aura_connect.security.oauth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.aura.aura_connect.security.jwt.JwtTokenProvider;
+import com.aura.aura_connect.security.jwt.RefreshTokenStore;
+import com.aura.aura_connect.security.jwt.TokenProvider;
+import com.aura.aura_connect.security.jwt.config.JwtProperties;
 import com.aura.aura_connect.user.domain.SocialType;
 import com.aura.aura_connect.user.domain.UserPrincipal;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
+import java.time.Duration;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
@@ -28,20 +31,27 @@ import org.springframework.security.core.Authentication;
 class OAuth2AuthenticationSuccessHandlerTest {
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    private TokenProvider tokenProvider;
 
-    private ObjectMapper objectMapper;
+    @Mock
+    private RefreshTokenStore refreshTokenStore;
+
     private OAuth2AuthenticationSuccessHandler successHandler;
+    private JwtProperties jwtProperties;
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
-        successHandler = new OAuth2AuthenticationSuccessHandler(jwtTokenProvider, objectMapper);
+        jwtProperties = new JwtProperties(
+                "this-is-a-long-enough-test-secret-key-value",
+                3600,
+                1209600,
+                "ACCESS_TOKEN",
+                "REFRESH_TOKEN");
+        successHandler = new OAuth2AuthenticationSuccessHandler(tokenProvider, refreshTokenStore, jwtProperties);
     }
 
     @Test
-    void onAuthenticationSuccess_generatesTokenAndWritesJsonResponse() throws ServletException, IOException {
-        // 실행 방법: 성공 핸들러를 직접 호출해서 response 를 검사하는 방식
+    void onAuthenticationSuccess_setsHttpOnlyCookiesAndRedirects() throws ServletException, IOException {
         UserPrincipal principal = UserPrincipal.builder()
                 .id(42L)
                 .email("jane.doe@example.com")
@@ -52,27 +62,33 @@ class OAuth2AuthenticationSuccessHandlerTest {
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 
-        when(jwtTokenProvider.generateAccessToken(principal)).thenReturn("mock-access-token");
+        when(tokenProvider.generateAccessToken(principal)).thenReturn("mock-access-token");
+        when(tokenProvider.generateRefreshToken(principal.getId())).thenReturn("mock-refresh-token");
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
-        verify(jwtTokenProvider).generateAccessToken(principal);
+        verify(tokenProvider).generateAccessToken(principal);
+        verify(tokenProvider).generateRefreshToken(principal.getId());
 
-        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
-        assertThat(response.getContentType()).isEqualTo(MediaType.APPLICATION_JSON_VALUE);
+        ArgumentCaptor<Duration> durationCaptor = ArgumentCaptor.forClass(Duration.class);
+        verify(refreshTokenStore).save(eq(principal.getId()), eq("mock-refresh-token"), durationCaptor.capture());
+        assertThat(durationCaptor.getValue()).isEqualTo(Duration.ofSeconds(jwtProperties.refreshTokenValiditySeconds()));
 
-        Map<String, Object> payload = objectMapper.readValue(
-                response.getContentAsByteArray(), new TypeReference<Map<String, Object>>() {});
-        assertThat(payload.get("accessToken")).isEqualTo("mock-access-token");
+        List<String> cookieHeaders = response.getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookieHeaders).hasSize(2);
+        assertThat(cookieHeaders)
+                .anySatisfy(header -> assertThat(header).contains("ACCESS_TOKEN=mock-access-token"))
+                .anySatisfy(header -> assertThat(header).contains("REFRESH_TOKEN=mock-refresh-token"))
+                .allSatisfy(header -> {
+                    assertThat(header).contains("HttpOnly");
+                    assertThat(header).contains("Secure");
+                    assertThat(header).contains("SameSite=Lax");
+                });
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> user = (Map<String, Object>) payload.get("user");
-        assertThat(user).isNotNull();
-        assertThat(user.get("id")).isEqualTo(42);
-        assertThat(user.get("email")).isEqualTo("jane.doe@example.com");
-        assertThat(user.get("socialType")).isEqualTo(SocialType.GOOGLE.name());
+        assertThat(response.getRedirectedUrl()).isEqualTo("/oauth/success");
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FOUND);
     }
 }

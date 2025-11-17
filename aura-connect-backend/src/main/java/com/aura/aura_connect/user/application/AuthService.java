@@ -1,6 +1,6 @@
 package com.aura.aura_connect.user.application;
 
-import com.aura.aura_connect.security.jwt.JwtTokenProvider;
+import com.aura.aura_connect.security.jwt.TokenProvider;
 import com.aura.aura_connect.user.domain.User;
 import com.aura.aura_connect.user.domain.UserPrincipal;
 import com.aura.aura_connect.user.domain.repository.UserRepository;
@@ -22,7 +22,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenProvider tokenProvider;
 
     @Transactional
     public AuthResponse register(SignUpRequest request) {
@@ -57,7 +57,7 @@ public class AuthService {
 
     private AuthResponse buildAuthResponse(User user) {
         UserPrincipal principal = UserPrincipal.from(user);
-        String token = jwtTokenProvider.generateAccessToken(principal);
+        String token = tokenProvider.generateAccessToken(principal);
 
         AuthenticatedUserResponse userResponse = new AuthenticatedUserResponse(
                 user.getId(),
