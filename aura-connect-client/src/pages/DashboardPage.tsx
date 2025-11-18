@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import httpClient from '../lib/httpClient'
 
 type MainPageHighlight = {
@@ -50,14 +49,6 @@ const DashboardPage = () => {
     <section className="page">
       <h1 className="page__title">{mainData?.title ?? 'Welcome to Project AURA'}</h1>
       <p className="page__description">{mainData?.message ?? fallbackDescription}</p>
-      <div className="page__actions">
-        <Link className="page__button" to="/login">
-          로그인
-        </Link>
-        <Link className="page__button page__button--secondary" to="/register">
-          회원가입
-        </Link>
-      </div>
       {mainData?.timestamp && (
         <p className="page__status">Last synced: {new Date(mainData.timestamp).toLocaleString()}</p>
       )}
