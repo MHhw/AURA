@@ -1,20 +1,8 @@
 import type { ChangeEvent, FormEvent } from 'react'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import httpClient from '../lib/httpClient'
-
-type AuthenticatedUser = {
-  id: number
-  email: string
-  name: string
-  profileImageUrl: string | null
-  socialType: string
-}
-
-type AuthResponse = {
-  accessToken: string
-  user: AuthenticatedUser
-}
+import { useAuth, type AuthPayload } from '../contexts/AuthContext'
 
 type ApiResponse<T> = {
   code: string
@@ -29,7 +17,8 @@ const LoginPage = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const navigate = useNavigate()
+  const { login } = useAuth()
 
   const socialProviders = useMemo(
     () => [
@@ -49,12 +38,11 @@ const LoginPage = () => {
     event.preventDefault()
     setIsSubmitting(true)
     setError('')
-    setSuccess('')
 
     try {
-      const { data } = await httpClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/login', form)
-      localStorage.setItem('auth_token', data.data.accessToken)
-      setSuccess(`환영합니다, ${data.data.user.name}님! 액세스 토큰이 저장되었습니다.`)
+      const { data } = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/login', form)
+      login(data.data)
+      navigate('/')
     } catch (submitError) {
       console.error(submitError)
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
@@ -112,7 +100,6 @@ const LoginPage = () => {
           </span>
         </div>
 
-        {success && <p className="form-message form-message--success">{success}</p>}
         {error && <p className="form-message form-message--error">{error}</p>}
       </form>
 
