@@ -1,20 +1,8 @@
 import type { ChangeEvent, FormEvent } from 'react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import httpClient from '../lib/httpClient'
-
-type AuthenticatedUser = {
-  id: number
-  email: string
-  name: string
-  profileImageUrl: string | null
-  socialType: string
-}
-
-type AuthResponse = {
-  accessToken: string
-  user: AuthenticatedUser
-}
+import { useAuth, type AuthPayload } from '../contexts/AuthContext'
 
 type ApiResponse<T> = {
   code: string
@@ -30,7 +18,8 @@ const RegisterPage = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -41,12 +30,11 @@ const RegisterPage = () => {
     event.preventDefault()
     setIsSubmitting(true)
     setError('')
-    setSuccess('')
 
     try {
-      const { data } = await httpClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/register', form)
-      localStorage.setItem('auth_token', data.data.accessToken)
-      setSuccess(`${data.data.user.name}님, 환영합니다! 자동으로 로그인되었으며 토큰이 저장되었습니다.`)
+      const { data } = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/register', form)
+      login(data.data)
+      navigate('/')
     } catch (submitError) {
       console.error(submitError)
       setError('회원가입에 실패했습니다. 입력 정보를 다시 확인해 주세요.')
@@ -115,7 +103,6 @@ const RegisterPage = () => {
           </span>
         </div>
 
-        {success && <p className="form-message form-message--success">{success}</p>}
         {error && <p className="form-message form-message--error">{error}</p>}
       </form>
     </section>

@@ -1,5 +1,5 @@
 import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import axios from 'axios'
+import axios, { AxiosHeaders } from 'axios'
 
 const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080',
@@ -13,14 +13,13 @@ httpClient.interceptors.request.use(
     const token = localStorage.getItem('auth_token')
 
     if (token) {
-      if (typeof config.headers?.set === 'function') {
-        config.headers.set('Authorization', `Bearer ${token}`)
-      } else {
-        config.headers = {
-          ...config.headers,
-          Authorization: `Bearer ${token}`,
-        }
-      }
+      const headers =
+        typeof config.headers?.set === 'function'
+          ? config.headers
+          : new AxiosHeaders(config.headers)
+
+      headers.set('Authorization', `Bearer ${token}`)
+      config.headers = headers
     }
 
     return config
