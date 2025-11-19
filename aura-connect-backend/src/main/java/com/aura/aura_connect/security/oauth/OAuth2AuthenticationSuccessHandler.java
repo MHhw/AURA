@@ -1,16 +1,15 @@
 package com.aura.aura_connect.security.oauth;
 
-import com.aura.aura_connect.security.jwt.CookieUtils;
-import com.aura.aura_connect.security.jwt.RefreshTokenStore;
-import com.aura.aura_connect.security.jwt.TokenProvider;
-import com.aura.aura_connect.security.jwt.config.JwtProperties;
+import com.aura.aura_connect.config.AppProperties;
+import com.aura.aura_connect.security.jwt.AuthCookieManager;
+import com.aura.aura_connect.security.jwt.AuthTokenService;
+import com.aura.aura_connect.security.jwt.AuthTokens;
 import com.aura.aura_connect.user.domain.SocialType;
 import com.aura.aura_connect.user.domain.UserPrincipal;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,24 +17,20 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenStore refreshTokenStore;
-    private final JwtProperties jwtProperties;
-    private final CookieUtils cookieUtils;
+    private final AuthTokenService authTokenService;
+    private final AuthCookieManager authCookieManager;
+    private final AppProperties appProperties;
 
     public OAuth2AuthenticationSuccessHandler(
-            TokenProvider tokenProvider,
-            RefreshTokenStore refreshTokenStore,
-            JwtProperties jwtProperties,
-            CookieUtils cookieUtils) {
-        this.tokenProvider = tokenProvider;
-        this.refreshTokenStore = refreshTokenStore;
-        this.jwtProperties = jwtProperties;
-        this.cookieUtils = cookieUtils;
+            AuthTokenService authTokenService, AuthCookieManager authCookieManager, AppProperties appProperties) {
+        this.authTokenService = authTokenService;
+        this.authCookieManager = authCookieManager;
+        this.appProperties = appProperties;
     }
 
     @Override
@@ -44,24 +39,15 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
         UserPrincipal principal = resolvePrincipal(authentication);
-        String accessToken = tokenProvider.generateAccessToken(principal);
-        String refreshToken = tokenProvider.generateRefreshToken(principal.getId());
+        AuthTokens tokens = authTokenService.issueTokens(principal);
+        authCookieManager.write(response, tokens);
 
-        refreshTokenStore.save(
-                principal.getId(), refreshToken, Duration.ofSeconds(jwtProperties.refreshTokenValiditySeconds()));
+        String redirectTarget = UriComponentsBuilder.fromUriString(appProperties.frontendBaseUrl())
+                .path("/oauth/success")
+                .build()
+                .toUriString();
 
-        cookieUtils.addHttpOnlyCookie(
-                response,
-                jwtProperties.accessTokenCookieName(),
-                accessToken,
-                jwtProperties.accessTokenValiditySeconds());
-        cookieUtils.addHttpOnlyCookie(
-                response,
-                jwtProperties.refreshTokenCookieName(),
-                refreshToken,
-                jwtProperties.refreshTokenValiditySeconds());
-
-        response.sendRedirect("/oauth/success");
+        response.sendRedirect(redirectTarget);
     }
 
     private UserPrincipal resolvePrincipal(Authentication authentication) {

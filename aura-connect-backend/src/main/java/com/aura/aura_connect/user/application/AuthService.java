@@ -1,9 +1,11 @@
 package com.aura.aura_connect.user.application;
 
-import com.aura.aura_connect.security.jwt.TokenProvider;
+import com.aura.aura_connect.security.jwt.AuthTokenService;
+import com.aura.aura_connect.security.jwt.AuthTokens;
 import com.aura.aura_connect.user.domain.User;
 import com.aura.aura_connect.user.domain.UserPrincipal;
 import com.aura.aura_connect.user.domain.repository.UserRepository;
+import com.aura.aura_connect.user.application.dto.AuthResult;
 import com.aura.aura_connect.user.presentation.dto.AuthResponse;
 import com.aura.aura_connect.user.presentation.dto.AuthenticatedUserResponse;
 import com.aura.aura_connect.user.presentation.dto.SignInRequest;
@@ -22,10 +24,10 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenProvider tokenProvider;
+    private final AuthTokenService authTokenService;
 
     @Transactional
-    public AuthResponse register(SignUpRequest request) {
+    public AuthResult register(SignUpRequest request) {
         userRepository.findByEmail(request.email()).ifPresent(user -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered.");
         });
@@ -36,10 +38,10 @@ public class AuthService {
                 passwordEncoder.encode(request.password()));
 
         userRepository.save(user);
-        return buildAuthResponse(user);
+        return buildAuthResult(user);
     }
 
-    public AuthResponse login(SignInRequest request) {
+    public AuthResult login(SignInRequest request) {
         User user = userRepository
                 .findByEmail(request.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
@@ -52,12 +54,16 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
         }
 
-        return buildAuthResponse(user);
+        return buildAuthResult(user);
     }
 
-    private AuthResponse buildAuthResponse(User user) {
+    public void logout(Long userId) {
+        authTokenService.revokeTokens(userId);
+    }
+
+    private AuthResult buildAuthResult(User user) {
         UserPrincipal principal = UserPrincipal.from(user);
-        String token = tokenProvider.generateAccessToken(principal);
+        AuthTokens tokens = authTokenService.issueTokens(principal);
 
         AuthenticatedUserResponse userResponse = new AuthenticatedUserResponse(
                 user.getId(),
@@ -66,7 +72,11 @@ public class AuthService {
                 user.getProfileImageUrl(),
                 user.getSocialType());
 
-        return new AuthResponse(token, userResponse);
+        AuthResponse.TokenMetadata tokenMetadata = AuthResponse.bearer(
+                authTokenService.accessTokenTtlSeconds(), authTokenService.refreshTokenTtlSeconds());
+
+        AuthResponse response = new AuthResponse(userResponse, tokenMetadata);
+        return new AuthResult(response, tokens);
     }
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import httpClient from '../lib/httpClient'
+import type { ApiResponse } from '../types/api'
 
 type MainPageHighlight = {
   id: string
@@ -13,12 +14,6 @@ type MainPageData = {
   timestamp: string
   metrics: Record<string, number | string>
   highlights: MainPageHighlight[]
-}
-
-type ApiResponse<T> = {
-  code: string
-  message: string
-  data: T
 }
 
 const fallbackDescription =

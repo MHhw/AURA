@@ -67,6 +67,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User findOrCreateUser(OAuth2UserProfile profile) {
+        // Automatically sign up the user if they have not visited before. When we later add an
+        // "additional profile information" screen we can persist the provisional user first and
+        // surface a pending onboarding flag to the frontend.
         return userService.findOrCreateSocialUser(profile);
     }
 }

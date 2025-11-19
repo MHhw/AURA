@@ -2,13 +2,9 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import httpClient from '../lib/httpClient'
-import { useAuth, type AuthPayload } from '../contexts/AuthContext'
-
-type ApiResponse<T> = {
-  code: string
-  message: string
-  data: T
-}
+import { useAuth } from '../contexts/AuthContext'
+import type { ApiResponse } from '../types/api'
+import type { AuthResponse } from '../types/auth'
 
 const LoginPage = () => {
   const [form, setForm] = useState({
@@ -40,8 +36,9 @@ const LoginPage = () => {
     setError('')
 
     try {
-      const { data } = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/login', form)
-      login(data.data)
+      const { data } = await httpClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/login', form)
+      // Tokens are stored in HttpOnly cookies by the server, so the client only tracks the user object.
+      login(data.data.user)
       navigate('/')
     } catch (submitError) {
       console.error(submitError)
@@ -53,6 +50,7 @@ const LoginPage = () => {
 
   const handleSocialLogin = (provider: string) => {
     const backendBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+    // The backend will redirect back to APP_FRONTEND_BASE_URL (see AppProperties) after it stores cookies.
     window.location.href = `${backendBaseUrl}/oauth2/authorization/${provider}`
   }
 

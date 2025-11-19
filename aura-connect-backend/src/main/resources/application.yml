@@ -3,6 +3,8 @@ spring:
     active: dev
   application:
     name: aura-connect
+app:
+  frontend-base-url: ${APP_FRONTEND_BASE_URL:http://localhost:5173}
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/aura}

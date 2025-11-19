@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import './FullWidthLayout.css'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -17,10 +18,24 @@ const menuItems: MenuItem[] = [
 
 const FullWidthLayout = () => {
   const navigate = useNavigate()
-  const { isAuthenticated, user, logout } = useAuth()
+  const { isAuthenticated, user, logout, isLoading } = useAuth()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
-  const handleLogout = () => {
-    logout()
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleLogout = async () => {
+    await logout()
+    setIsMenuOpen(false)
     navigate('/')
   }
 
@@ -45,9 +60,17 @@ const FullWidthLayout = () => {
           ))}
         </nav>
         <div className="layout-actions" aria-live="polite">
-          {isAuthenticated && user ? (
-            <>
-              <div className="layout-user">
+          {isLoading ? (
+            <span className="layout-auth-loading">인증 상태 확인 중...</span>
+          ) : isAuthenticated && user ? (
+            <div className="layout-user-menu" ref={menuRef}>
+              <button
+                type="button"
+                className="layout-user-trigger"
+                aria-haspopup="true"
+                aria-expanded={isMenuOpen}
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+              >
                 {user.profileImageUrl ? (
                   <img
                     className="layout-user__avatar"
@@ -63,14 +86,28 @@ const FullWidthLayout = () => {
                   <span className="layout-user__name">{user.name}</span>
                   <span className="layout-user__email">{user.email}</span>
                 </div>
-              </div>
-              <NavLink className="layout-action-button" to="/settings">
-                정보수정
-              </NavLink>
-              <button type="button" className="layout-action-button layout-action-button--secondary" onClick={handleLogout}>
-                로그아웃
+                <span className="layout-user__chevron" aria-hidden="true">
+                  {isMenuOpen ? '▲' : '▼'}
+                </span>
               </button>
-            </>
+              {isMenuOpen && (
+                <div className="layout-user-dropdown" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      navigate('/settings')
+                    }}
+                  >
+                    마이페이지
+                  </button>
+                  <button type="button" role="menuitem" onClick={handleLogout}>
+                    로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <NavLink className="layout-action-button" to="/login">
