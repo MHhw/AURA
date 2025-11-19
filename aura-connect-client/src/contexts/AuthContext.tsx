@@ -1,81 +1,63 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
-
-export type AuthenticatedUser = {
-  id: number
-  email: string
-  name: string
-  profileImageUrl: string | null
-  socialType: string
-}
-
-export type AuthPayload = {
-  accessToken: string
-  user: AuthenticatedUser
-}
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import httpClient from '../lib/httpClient'
+import type { ApiResponse } from '../types/api'
+import type { AuthUser } from '../types/auth'
 
 type AuthContextValue = {
-  user: AuthenticatedUser | null
-  accessToken: string | null
+  user: AuthUser | null
   isAuthenticated: boolean
-  login: (payload: AuthPayload) => void
-  logout: () => void
+  isLoading: boolean
+  login: (user: AuthUser) => void
+  logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
-
-const AUTH_TOKEN_KEY = 'auth_token'
-const AUTH_USER_KEY = 'auth_user'
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-const parseStoredUser = () => {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  try {
-    const storedUser = localStorage.getItem(AUTH_USER_KEY)
-    return storedUser ? (JSON.parse(storedUser) as AuthenticatedUser) : null
-  } catch (error) {
-    console.warn('Failed to parse stored auth user', error)
-    return null
-  }
-}
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthenticatedUser | null>(() => parseStoredUser())
-  const [accessToken, setAccessToken] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : localStorage.getItem(AUTH_TOKEN_KEY),
-  )
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const login = useCallback((payload: AuthPayload) => {
-    setUser(payload.user)
-    setAccessToken(payload.accessToken)
-    localStorage.setItem(AUTH_TOKEN_KEY, payload.accessToken)
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload.user))
+  const login = useCallback((nextUser: AuthUser) => {
+    // Token strings live in HttpOnly cookies; store only normalized user info in memory.
+    setUser(nextUser)
   }, [])
 
-  const logout = useCallback(() => {
-    setUser(null)
-    setAccessToken(null)
-    localStorage.removeItem(AUTH_TOKEN_KEY)
-    localStorage.removeItem(AUTH_USER_KEY)
+  // Re-fetches the authenticated user so that a simple refresh restores the session using cookies.
+  const refreshUser = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const { data } = await httpClient.get<ApiResponse<AuthUser>>('/api/v1/auth/me')
+      setUser(data.data)
+    } catch {
+      setUser(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshUser()
+  }, [refreshUser])
+
+  const logout = useCallback(async () => {
+    try {
+      await httpClient.post<ApiResponse<null>>('/api/v1/auth/logout')
+    } finally {
+      setUser(null)
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      accessToken,
-      isAuthenticated: Boolean(user && accessToken),
+      isAuthenticated: Boolean(user),
+      isLoading,
       login,
       logout,
+      refreshUser,
     }),
-    [user, accessToken, login, logout],
+    [isLoading, login, logout, refreshUser, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -89,4 +71,5 @@ export const useAuth = () => {
 
   return context
 }
+
 

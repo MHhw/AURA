@@ -8,7 +8,7 @@ import TeamsPage from './pages/TeamsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
-import OAuthCallbackPage from './pages/OAuthCallbackPage'
+import OAuthSuccessPage from './pages/OAuthSuccessPage'
 
 const App = () => {
   return (
@@ -21,7 +21,7 @@ const App = () => {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
-        <Route path="oauth2/callback" element={<OAuthCallbackPage />} />
+        <Route path="oauth/success" element={<OAuthSuccessPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

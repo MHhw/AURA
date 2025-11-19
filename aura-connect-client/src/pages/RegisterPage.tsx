@@ -2,13 +2,9 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import httpClient from '../lib/httpClient'
-import { useAuth, type AuthPayload } from '../contexts/AuthContext'
-
-type ApiResponse<T> = {
-  code: string
-  message: string
-  data: T
-}
+import { useAuth } from '../contexts/AuthContext'
+import type { ApiResponse } from '../types/api'
+import type { AuthResponse } from '../types/auth'
 
 const RegisterPage = () => {
   const [form, setForm] = useState({
@@ -32,8 +28,9 @@ const RegisterPage = () => {
     setError('')
 
     try {
-      const { data } = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/register', form)
-      login(data.data)
+      const { data } = await httpClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/register', form)
+      // Cookies now hold the JWT pair; the SPA keeps only normalized user info in memory.
+      login(data.data.user)
       navigate('/')
     } catch (submitError) {
       console.error(submitError)
