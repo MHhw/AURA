@@ -1,30 +1,44 @@
-version: '3.8'
-
 services:
-  # 백엔드 설정 (aura-connect-backend)
+  db:
+    image: postgres:16-alpine
+    container_name: aura-db
+    restart: always
+    environment:
+      - POSTGRES_DB=aura
+      - POSTGRES_USER=aura
+      - POSTGRES_PASSWORD=aura
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
   backend:
     build:
-      context: ./aura-connect-backend  # [수정됨] 실제 폴더 이름
-      dockerfile: Dockerfile           # Dockerfile이 이 폴더 안에 있어야 함
+      context: ./aura-connect-backend
+      dockerfile: Dockerfile
     container_name: aura-backend
     ports:
       - "8080:8080"
     volumes:
-      - ./aura-connect-backend/src:/app/src # [수정됨] 소스 코드 연결
+      - ./aura-connect-backend/src:/app/src
       - ./aura-connect-backend/build.gradle:/app/build.gradle
     environment:
       - SPRING_DEVTOOLS_RESTART_ENABLED=true
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/aura
+      - SPRING_DATASOURCE_USERNAME=aura
+      - SPRING_DATASOURCE_PASSWORD=aura1234
+    depends_on:
+      - db
 
-  # 프론트엔드 설정 (aura-connect-client)
   frontend:
     build:
-      context: ./aura-connect-client   # [수정됨] 실제 폴더 이름
-      dockerfile: Dockerfile           # Dockerfile이 이 폴더 안에 있어야 함
+      context: ./aura-connect-client
+      dockerfile: Dockerfile
     container_name: aura-frontend
     ports:
       - "3000:3000"
     volumes:
-      - ./aura-connect-client/src:/app/src # [수정됨] 소스 코드 연결
+      - ./aura-connect-client/src:/app/src
       - ./aura-connect-client/public:/app/public
       - /app/node_modules
     environment:
@@ -33,3 +47,6 @@ services:
     tty: true
     depends_on:
       - backend
+
+volumes:
+  db-data:
