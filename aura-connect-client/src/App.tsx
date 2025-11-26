@@ -9,16 +9,54 @@ import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import OAuthSuccessPage from './pages/OAuthSuccessPage'
+import SalonDiscoveryPage from './pages/SalonDiscoveryPage'
+import SalonGuard from './components/guards/SalonGuard'
 
 const App = () => {
   return (
     <Routes>
       <Route element={<FullWidthLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="projects" element={<ProjectsPage />} />
-        <Route path="teams" element={<TeamsPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        <Route index element={<SalonDiscoveryPage />} />
+        <Route
+          path="dashboard"
+          element={
+            <SalonGuard>
+              <DashboardPage />
+            </SalonGuard>
+          }
+        />
+        <Route
+          path="projects"
+          element={
+            <SalonGuard>
+              <ProjectsPage />
+            </SalonGuard>
+          }
+        />
+        <Route
+          path="teams"
+          element={
+            <SalonGuard>
+              <TeamsPage />
+            </SalonGuard>
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <SalonGuard>
+              <ReportsPage />
+            </SalonGuard>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <SalonGuard>
+              <SettingsPage />
+            </SalonGuard>
+          }
+        />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="oauth/success" element={<OAuthSuccessPage />} />

@@ -1,26 +1,40 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './FullWidthLayout.css'
 import { useAuth } from '../../contexts/AuthContext'
+import { useSalon } from '../../contexts/SalonContext'
+import auraWordmark from '../../assets/aura-wordmark.svg'
 
 type MenuItem = {
-  label: string
+  key: 'dashboard' | 'projects' | 'teams' | 'reports' | 'settings'
   path: string
+  requireAuth?: boolean
 }
 
-const menuItems: MenuItem[] = [
-  { label: 'Dashboard', path: '/' },
-  { label: 'Projects', path: '/projects' },
-  { label: 'Teams', path: '/teams' },
-  { label: 'Reports', path: '/reports' },
-  { label: 'Settings', path: '/settings' },
+type RenderMenuItem = MenuItem & { label: string }
+
+const baseMenuItems: MenuItem[] = [
+  { key: 'dashboard', path: '/dashboard' },
+  { key: 'projects', path: '/projects' },
+  { key: 'teams', path: '/teams' },
+  { key: 'reports', path: '/reports' },
+  { key: 'settings', path: '/settings', requireAuth: true },
 ]
 
 const FullWidthLayout = () => {
   const navigate = useNavigate()
   const { isAuthenticated, user, logout, isLoading } = useAuth()
+  const { selectedSalon, menuLabels, appearance } = useSalon()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
+
+  const menuItems: RenderMenuItem[] = useMemo(
+    () =>
+      baseMenuItems
+        .filter((item) => !(item.requireAuth && !isAuthenticated))
+        .map((item) => ({ ...item, label: menuLabels[item.key] })),
+    [isAuthenticated, menuLabels],
+  )
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,15 +54,30 @@ const FullWidthLayout = () => {
   }
 
   return (
-    <div className="full-width-layout">
-      <header className="layout-header">
-        <div className="layout-logo">Project AURA</div>
+    <div
+      className="full-width-layout"
+      style={{
+        ['--layout-primary' as string]: appearance.primaryColor,
+        ['--layout-accent' as string]: appearance.accentColor,
+      }}
+    >
+      <header
+        className={`layout-header layout-header--${appearance.frameStyle}`}
+        data-texture={appearance.backgroundTexture}
+      >
+        <Link
+          to={selectedSalon ? '/dashboard' : '/'}
+          className="layout-logo"
+          aria-label="AURA 대시보드로 이동"
+        >
+          <img src={auraWordmark} alt="AURA" />
+        </Link>
         <nav className="layout-nav" aria-label="Primary">
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === '/'}
+              end={item.path === '/dashboard'}
               className={({ isActive }: { isActive: boolean }) =>
                 ['layout-nav__link', isActive ? 'layout-nav__link--active' : '']
                   .filter(Boolean)
@@ -59,6 +88,21 @@ const FullWidthLayout = () => {
             </NavLink>
           ))}
         </nav>
+        <div className="layout-salon-meta">
+          {selectedSalon ? (
+            <div className="layout-salon-pill">
+              <p>선택된 살롱</p>
+              <strong>{selectedSalon.name}</strong>
+              <span>
+                {selectedSalon.city} · {selectedSalon.address}
+              </span>
+            </div>
+          ) : (
+            <div className="layout-salon-pill layout-salon-pill--empty">
+              아직 살롱이 연결되지 않았습니다.
+            </div>
+          )}
+        </div>
         <div className="layout-actions" aria-live="polite">
           {isLoading ? (
             <span className="layout-auth-loading">인증 상태 확인 중...</span>
