@@ -26,7 +26,7 @@ services:
       - SPRING_DEVTOOLS_RESTART_ENABLED=true
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/aura
       - SPRING_DATASOURCE_USERNAME=aura
-      - SPRING_DATASOURCE_PASSWORD=aura1234
+      - SPRING_DATASOURCE_PASSWORD=aura
     depends_on:
       - db
 
