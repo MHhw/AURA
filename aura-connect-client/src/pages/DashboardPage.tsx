@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useSalon } from '../contexts/SalonContext'
 
 type SummaryCard = {
   id: string
@@ -19,6 +20,7 @@ type Appointment = {
 }
 
 const DashboardPage = () => {
+  const { selectedSalon } = useSalon()
   const todayLabel = useMemo(() => {
     const today = new Date()
     return today.toLocaleDateString('ko-KR', {
@@ -121,8 +123,11 @@ const DashboardPage = () => {
     <section className="page dashboard-page">
       <header className="dashboard-header">
         <div>
-          <h1 className="page__title">AURA 미용실 대시보드</h1>
-          <p className="page__description">오늘 예약 현황과 매장 지표를 한눈에 확인하세요.</p>
+          <h1 className="page__title">{selectedSalon?.name ?? '선택된 살롱'} 대시보드</h1>
+          <p className="page__description">
+            오늘 예약 현황과 매장 지표를 한눈에 확인하세요. 살롱별 커스텀 메뉴명과 브랜딩 테마는 설정에서
+            바로 수정할 수 있습니다.
+          </p>
         </div>
         <span className="dashboard-date">{todayLabel}</span>
       </header>

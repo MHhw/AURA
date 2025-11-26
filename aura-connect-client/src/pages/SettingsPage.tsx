@@ -1,4 +1,5 @@
 import { type ChangeEvent, useState } from 'react'
+import { useSalon } from '../contexts/SalonContext'
 
 type BusinessHour = {
   day: string
@@ -18,6 +19,7 @@ const initialBusinessHours: BusinessHour[] = [
 ]
 
 const SettingsPage = () => {
+  const { menuLabels, updateMenuLabel, appearance, updateAppearance, selectedSalon } = useSalon()
   const [basicInfo, setBasicInfo] = useState({
     storeName: 'AURA 헤어살롱',
     ownerName: '김아라',
@@ -73,11 +75,22 @@ const SettingsPage = () => {
     console.log('예약 정책 저장', policy)
   }
 
+  const handleMenuLabelChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target
+    updateMenuLabel(name as keyof typeof menuLabels, value)
+  }
+
+  const handleAppearanceChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = event.target
+    updateAppearance({ [name]: value } as Partial<typeof appearance>)
+  }
+
   return (
     <section className="page settings-page">
       <div>
         <h1 className="page__title">매장 설정</h1>
         <p className="page__description">매장 정보, 영업시간, 예약 정책을 설정합니다.</p>
+        {selectedSalon && <p className="page__status">현재 연결된 살롱: {selectedSalon.name}</p>}
       </div>
 
       <section className="settings-card">
@@ -185,6 +198,73 @@ const SettingsPage = () => {
           <button type="button" onClick={handleSavePolicy}>
             정책 저장
           </button>
+        </div>
+      </section>
+
+      <section className="settings-card">
+        <h2>오너 커스터마이징</h2>
+        <p className="page__status">메뉴명과 헤더 프레임 색상을 살롱 브랜드에 맞게 조정합니다.</p>
+        <div className="form-grid">
+          <label>
+            Dashboard 라벨
+            <input name="dashboard" value={menuLabels.dashboard} onChange={handleMenuLabelChange} />
+          </label>
+          <label>
+            Projects 라벨
+            <input name="projects" value={menuLabels.projects} onChange={handleMenuLabelChange} />
+          </label>
+          <label>
+            Teams 라벨
+            <input name="teams" value={menuLabels.teams} onChange={handleMenuLabelChange} />
+          </label>
+          <label>
+            Reports 라벨
+            <input name="reports" value={menuLabels.reports} onChange={handleMenuLabelChange} />
+          </label>
+          <label>
+            Settings 라벨
+            <input name="settings" value={menuLabels.settings} onChange={handleMenuLabelChange} />
+          </label>
+        </div>
+
+        <div className="form-grid">
+          <label>
+            프레임 스타일
+            <select name="frameStyle" value={appearance.frameStyle} onChange={handleAppearanceChange}>
+              <option value="gradient">그라데이션</option>
+              <option value="glass">유리질감</option>
+            </select>
+          </label>
+          <label>
+            주요 색상
+            <input name="primaryColor" value={appearance.primaryColor} onChange={handleAppearanceChange} />
+          </label>
+          <label>
+            포인트 색상
+            <input name="accentColor" value={appearance.accentColor} onChange={handleAppearanceChange} />
+          </label>
+          <label>
+            배경 질감
+            <select
+              name="backgroundTexture"
+              value={appearance.backgroundTexture}
+              onChange={handleAppearanceChange}
+            >
+              <option value="mesh">Mesh</option>
+              <option value="waves">Waves</option>
+              <option value="dots">Dots</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="settings-actions">
+          <div className="layout-salon-pill">
+            <p>헤더 미리보기</p>
+            <strong>{menuLabels.dashboard} · {menuLabels.projects} · {menuLabels.teams}</strong>
+            <span>
+              {appearance.frameStyle} / {appearance.backgroundTexture}
+            </span>
+          </div>
         </div>
       </section>
 
