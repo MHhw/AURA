@@ -108,7 +108,7 @@ spring:
 cors:
   # Same custom prefix as above; IDE warnings can be ignored.
   allowed-origins:
-    - http://localhost:5173
+    - http://localhost:3000
 
 ---
 spring:
