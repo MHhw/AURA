@@ -4,11 +4,15 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class MainController {
+
+    private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
     @GetMapping("/")
     public Map<String, Object> readRoot() {
@@ -18,6 +22,12 @@ public class MainController {
     @GetMapping("/api/v1/main")
     public Map<String, Object> readMain() {
         return buildPayload();
+    }
+
+    @GetMapping("/api/v1/hi")
+    public Map<String, String> sayHi() {
+        log.info("hi");
+        return Map.of("message", "hi");
     }
 
     private Map<String, Object> buildPayload() {

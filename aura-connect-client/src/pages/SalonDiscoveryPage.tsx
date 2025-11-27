@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSalon } from '../contexts/SalonContext'
+import httpClient from '../lib/httpClient'
 
 const SalonDiscoveryPage = () => {
   const navigate = useNavigate()
   const { salons, selectSalon } = useSalon()
   const [query, setQuery] = useState('')
   const [city, setCity] = useState('all')
+  const [isPinging, setIsPinging] = useState(false)
+  const [pingStatus, setPingStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   const filteredSalons = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -26,6 +29,21 @@ const SalonDiscoveryPage = () => {
   const handleSelectSalon = (id: string) => {
     selectSalon(id)
     navigate('/dashboard')
+  }
+
+  const handlePingBackend = async () => {
+    setIsPinging(true)
+    setPingStatus('idle')
+
+    try {
+      await httpClient.get('/api/v1/hi')
+      setPingStatus('success')
+    } catch (error) {
+      console.error('백엔드 통신 중 오류가 발생했습니다.', error)
+      setPingStatus('error')
+    } finally {
+      setIsPinging(false)
+    }
   }
 
   return (
@@ -49,6 +67,13 @@ const SalonDiscoveryPage = () => {
             <div className="discovery-hero__stats">
               <strong>브랜딩 커스터마이징</strong>
               <span>메뉴 이름 · 프레임 수정 가능</span>
+            </div>
+            <div className="discovery-hero__stats">
+              <button className="primary-button" type="button" onClick={handlePingBackend} disabled={isPinging}>
+                {isPinging ? '확인 중...' : '백엔드 인사 보내기'}
+              </button>
+              {pingStatus === 'success' && <span className="chip">콘솔에 hi 출력됨</span>}
+              {pingStatus === 'error' && <span className="chip chip--error">요청 실패</span>}
             </div>
           </div>
         </div>
