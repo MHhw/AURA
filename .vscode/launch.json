@@ -9,6 +9,16 @@
             "projectName": "aura-connect-backend",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-AuraConnectApplication<aura-connect-aura-connect-backend>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.aura.aura_connect.AuraConnectApplication",
+            "projectName": "aura-connect-aura-connect-backend",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
