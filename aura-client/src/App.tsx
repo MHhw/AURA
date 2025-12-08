@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import './App.css';
 
 type Mode = 'login' | 'register';
-type RegisterStep = 'verify' | 'details';
 
 type SocialProvider = {
   name: string;
@@ -13,7 +12,6 @@ type SocialProvider = {
 
 function App() {
   const [mode, setMode] = useState<Mode>('login');
-  const [registerStep, setRegisterStep] = useState<RegisterStep>('verify');
 
   const socialProviders: SocialProvider[] = useMemo(
     () => [
@@ -63,7 +61,6 @@ function App() {
               aria-selected={mode === 'login'}
               onClick={() => {
                 setMode('login');
-                setRegisterStep('verify');
               }}
             >
               로그인
@@ -82,11 +79,7 @@ function App() {
           {mode === 'login' ? (
             <LoginForm socialProviders={socialProviders} recoveryProviders={recoveryProviders} />
           ) : (
-            <RegisterPanel
-              onNavigateLogin={() => setMode('login')}
-              step={registerStep}
-              onChangeStep={setRegisterStep}
-            />
+            <RegisterPanel onNavigateLogin={() => setMode('login')} socialProviders={socialProviders} />
           )}
         </section>
       </main>
@@ -166,122 +159,44 @@ function LoginForm({
 
 function RegisterPanel({
   onNavigateLogin,
-  step,
-  onChangeStep,
+  socialProviders,
 }: {
   onNavigateLogin: () => void;
-  step: RegisterStep;
-  onChangeStep: (step: RegisterStep) => void;
+  socialProviders: SocialProvider[];
 }) {
   return (
     <div className="stack" role="tabpanel" aria-labelledby="회원가입">
       <div className="panel-header">
         <div>
-          <p className="eyebrow">회원가입 여정</p>
-          <p className="header__title">원하는 인증 방식으로 시작하고, 바로 계정 정보를 입력하세요.</p>
-        </div>
-        <div className="header__actions">
-          <button type="button" className="secondary-btn" onClick={() => onChangeStep('details')}>
-            상세 입력 화면 미리보기
-          </button>
-          <button type="button" className="ghost-link" onClick={onNavigateLogin}>
-            이미 계정이 있으신가요? 로그인
-          </button>
+          <p className="eyebrow">간편 회원가입</p>
+          <p className="header__title">카카오, 네이버, 구글 계정으로 바로 시작하세요.</p>
         </div>
       </div>
 
-      {step === 'verify' ? (
-        <div className="stack gap-sm">
-          <div className="banner">
-            <p className="banner__eyebrow">간편 인증</p>
-            <strong>휴대폰 또는 이메일로 빠르게 본인 확인 후 회원가입을 진행하세요.</strong>
-            <p className="banner__desc">아이핀 없이도 보안이 유지되는 두 가지 인증 방식을 제공합니다.</p>
-          </div>
-
-          <div className="verification-grid">
-            <VerificationCard
-              title="휴대폰 본인인증"
-              description="본인 명의 휴대폰으로 인증번호를 받아 확인합니다."
-              accent="phone"
-              onNext={() => onChangeStep('details')}
-            />
-            <VerificationCard
-              title="이메일 본인인증"
-              description="이메일로 전달된 코드를 입력해 신원을 확인합니다."
-              accent="mail"
-              onNext={() => onChangeStep('details')}
-            />
-          </div>
-
-          <ul className="note-list">
-            <li>만 14세 미만은 보호자 동의가 필요합니다.</li>
-            <li>인증이 어려울 경우 고객센터로 문의하거나 다른 인증 수단을 선택해주세요.</li>
-          </ul>
-        </div>
-      ) : (
-        <div className="stack gap-sm" aria-live="polite">
-          <div className="detail-header">
-            <p className="badge">STEP 2</p>
-            <div>
-              <p className="detail-title">계정 정보 입력</p>
-              <p className="detail-desc">인증 후 전달될 핵심 정보만 먼저 준비했습니다.</p>
-            </div>
-            <button type="button" className="text-link" onClick={() => onChangeStep('verify')}>
-              인증 단계로 돌아가기
+      <div className="stack gap-sm">
+        <div className="social-row stretch">
+          {socialProviders.map((provider) => (
+            <button
+              key={provider.name}
+              type="button"
+              className={`social-btn social-${provider.name}`}
+              style={{ '--accent': provider.accent } as CSSProperties}
+            >
+              <span className="dot" aria-hidden />
+              {provider.label}로 시작하기
             </button>
-          </div>
-
-          <form className="form" onSubmit={(event) => event.preventDefault()}>
-            <label className="field">
-              <span className="field__label">아이디</span>
-              <input type="text" placeholder="영문 또는 이메일" autoComplete="username" />
-            </label>
-            <label className="field">
-              <span className="field__label">비밀번호</span>
-              <input type="password" placeholder="8자 이상, 영문/숫자 조합" autoComplete="new-password" />
-            </label>
-            <label className="field">
-              <span className="field__label">비밀번호 확인</span>
-              <input type="password" placeholder="비밀번호를 한 번 더 입력" autoComplete="new-password" />
-            </label>
-            <div className="placeholder-rows" aria-hidden>
-              <div className="placeholder" />
-              <div className="placeholder" />
-            </div>
-            <button type="submit" className="primary-btn">
-              가입 정보 임시 저장
-            </button>
-          </form>
+          ))}
         </div>
-      )}
+        <p className="signup-hint">간편 회원가입으로 빠르게 서비스를 이용해 보세요.</p>
+      </div>
+
+      <div className="divider" role="separator" aria-hidden>
+        <span>이미 계정이 있으신가요?</span>
+      </div>
+      <button type="button" className="ghost-link full-width" onClick={onNavigateLogin}>
+        로그인하러 가기
+      </button>
     </div>
-  );
-}
-
-function VerificationCard({
-  title,
-  description,
-  accent,
-  onNext,
-}: {
-  title: string;
-  description: string;
-  accent: 'phone' | 'mail';
-  onNext: () => void;
-}) {
-  return (
-    <article className={`verification-card ${accent}`}>
-      <div className="card-icon" aria-hidden>
-        {accent === 'phone' ? '📱' : '✉️'}
-      </div>
-      <div className="card-body">
-        <p className="card-title">{title}</p>
-        <p className="card-desc">{description}</p>
-        <button type="button" className="primary-btn" onClick={onNext}>
-          인증 진행하기
-        </button>
-      </div>
-    </article>
   );
 }
 
