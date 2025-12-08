@@ -17,8 +17,8 @@ function App() {
 
   const socialProviders: SocialProvider[] = useMemo(
     () => [
-      { name: 'kakao', accent: '#f8d900', label: '카카오' },
-      { name: 'naver', accent: '#00bf18', label: '네이버' },
+      { name: 'kakao', accent: '#fee500', label: '카카오' },
+      { name: 'naver', accent: '#03c75a', label: '네이버' },
       { name: 'google', accent: '#ffffff', label: '구글' },
     ],
     [],
@@ -26,8 +26,8 @@ function App() {
 
   const recoveryProviders: SocialProvider[] = useMemo(
     () => [
-      { name: 'kakao', accent: '#f8d900', label: '아이디찾기' },
-      { name: 'naver', accent: '#00bf18', label: '비밀번호찾기' },
+      { name: 'recover-id', accent: '#7c3aed', label: '아이디 찾기' },
+      { name: 'recover-password', accent: '#38bdf8', label: '비밀번호 찾기' },
     ],
     [],
   );
@@ -117,11 +117,6 @@ function LoginForm({
           <input type="checkbox" />
           <span>아이디 저장</span>
         </label>
-
-        <div className="link-list centered" aria-label="계정 도움말">
-          <a href="#">아이디 찾기</a>
-          <a href="#">비밀번호 찾기</a>
-        </div>
 
         <button type="submit" className="primary-btn">
           로그인
