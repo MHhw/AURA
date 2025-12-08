@@ -5,11 +5,6 @@ import './App.css';
 type Mode = 'login' | 'register';
 type RegisterStep = 'verify' | 'details';
 
-type QuickLink = {
-  label: string;
-  href?: string;
-};
-
 type SocialProvider = {
   name: string;
   accent: string;
@@ -20,20 +15,19 @@ function App() {
   const [mode, setMode] = useState<Mode>('login');
   const [registerStep, setRegisterStep] = useState<RegisterStep>('verify');
 
-  const authLinks: QuickLink[] = useMemo(
+  const socialProviders: SocialProvider[] = useMemo(
     () => [
-      { label: '회원가입' },
-      { label: '아이디 찾기' },
-      { label: '비밀번호 찾기' },
+      { name: 'kakao', accent: '#f8d900', label: '카카오' },
+      { name: 'naver', accent: '#00bf18', label: '네이버' },
+      { name: 'google', accent: '#ffffff', label: '구글' },
     ],
     [],
   );
 
-  const socialProviders: SocialProvider[] = useMemo(
+  const recoveryProviders: SocialProvider[] = useMemo(
     () => [
-      { name: 'kakao', accent: '#f8d900', label: '카카오로 계속하기' },
-      { name: 'naver', accent: '#00bf18', label: '네이버로 계속하기' },
-      { name: 'google', accent: '#ffffff', label: 'Google로 계속하기' },
+      { name: 'kakao', accent: '#f8d900', label: '아이디찾기' },
+      { name: 'naver', accent: '#00bf18', label: '비밀번호찾기' },
     ],
     [],
   );
@@ -86,7 +80,7 @@ function App() {
           </div>
 
           {mode === 'login' ? (
-            <LoginForm authLinks={authLinks} socialProviders={socialProviders} />
+            <LoginForm socialProviders={socialProviders} recoveryProviders={recoveryProviders} />
           ) : (
             <RegisterPanel
               onNavigateLogin={() => setMode('login')}
@@ -101,11 +95,11 @@ function App() {
 }
 
 function LoginForm({
-  authLinks,
   socialProviders,
+  recoveryProviders,
 }: {
-  authLinks: QuickLink[];
   socialProviders: SocialProvider[];
+  recoveryProviders: SocialProvider[];
 }) {
   return (
     <div className="stack" role="tabpanel" aria-labelledby="로그인">
@@ -119,18 +113,14 @@ function LoginForm({
           <input type="password" placeholder="비밀번호" autoComplete="current-password" />
         </label>
 
-        <div className="form__row">
-          <label className="checkbox">
-            <input type="checkbox" />
-            <span>아이디 저장</span>
-          </label>
-          <div className="link-list" aria-label="계정 도움말">
-            {authLinks.map((link) => (
-              <a key={link.label} href={link.href || '#'}>
-                {link.label}
-              </a>
-            ))}
-          </div>
+        <label className="checkbox">
+          <input type="checkbox" />
+          <span>아이디 저장</span>
+        </label>
+
+        <div className="link-list centered" aria-label="계정 도움말">
+          <a href="#">아이디 찾기</a>
+          <a href="#">비밀번호 찾기</a>
         </div>
 
         <button type="submit" className="primary-btn">
@@ -142,7 +132,7 @@ function LoginForm({
         <div className="divider" role="separator" aria-hidden>
           <span>다른 방법으로 로그인</span>
         </div>
-        <div className="social-grid">
+        <div className="social-row">
           {socialProviders.map((provider) => (
             <button
               key={provider.name}
@@ -155,9 +145,25 @@ function LoginForm({
             </button>
           ))}
         </div>
-        <button type="button" className="ghost-link">
-          비회원 주문조회
-        </button>
+      </div>
+
+      <div className="stack gap-sm">
+        <div className="divider" role="separator" aria-hidden>
+          <span>계정을 잊어버리셨나요?</span>
+        </div>
+        <div className="social-row">
+          {recoveryProviders.map((provider) => (
+            <button
+              key={provider.name}
+              type="button"
+              className={`social-btn social-${provider.name}`}
+              style={{ '--accent': provider.accent } as CSSProperties}
+            >
+              <span className="dot" aria-hidden />
+              {provider.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
