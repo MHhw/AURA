@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import './App.css';
 
 type Mode = 'login' | 'register';
+type RegisterStep = 'verify' | 'details';
 
 type QuickLink = {
   label: string;
@@ -17,6 +18,7 @@ type SocialProvider = {
 
 function App() {
   const [mode, setMode] = useState<Mode>('login');
+  const [registerStep, setRegisterStep] = useState<RegisterStep>('verify');
 
   const authLinks: QuickLink[] = useMemo(
     () => [
@@ -65,7 +67,10 @@ function App() {
               role="tab"
               className={mode === 'login' ? 'tab active' : 'tab'}
               aria-selected={mode === 'login'}
-              onClick={() => setMode('login')}
+              onClick={() => {
+                setMode('login');
+                setRegisterStep('verify');
+              }}
             >
               로그인
             </button>
@@ -85,7 +90,8 @@ function App() {
           ) : (
             <RegisterPanel
               onNavigateLogin={() => setMode('login')}
-              socialProviders={socialProviders}
+              step={registerStep}
+              onChangeStep={setRegisterStep}
             />
           )}
         </section>
@@ -159,26 +165,23 @@ function LoginForm({
 
 function RegisterPanel({
   onNavigateLogin,
-  socialProviders,
+  step,
+  onChangeStep,
 }: {
   onNavigateLogin: () => void;
-  socialProviders: SocialProvider[];
+  step: RegisterStep;
+  onChangeStep: (step: RegisterStep) => void;
 }) {
   return (
     <div className="stack" role="tabpanel" aria-labelledby="회원가입">
-      <div className="banner">
-        <p className="banner__eyebrow">웰컴 혜택</p>
-        <strong>가입 시 최대 25,000P와 무료배송 쿠폰을 받아보세요.</strong>
-        <p className="banner__desc">기업·단체를 위한 별도 전용 채널도 준비되어 있습니다.</p>
-      </div>
-
-      <div className="stack gap-sm">
-        <button type="button" className="primary-btn">
-          회원가입 시작하기
-        </button>
-        <div className="inline-actions">
-          <button type="button" className="secondary-btn">
-            법인회원 가입
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">회원가입 여정</p>
+          <p className="header__title">원하는 인증 방식으로 시작하고, 바로 계정 정보를 입력하세요.</p>
+        </div>
+        <div className="header__actions">
+          <button type="button" className="secondary-btn" onClick={() => onChangeStep('details')}>
+            상세 입력 화면 미리보기
           </button>
           <button type="button" className="ghost-link" onClick={onNavigateLogin}>
             이미 계정이 있으신가요? 로그인
@@ -186,33 +189,98 @@ function RegisterPanel({
         </div>
       </div>
 
-      <div className="stack gap-sm">
-        <div className="divider" role="separator" aria-hidden>
-          <span>간편 회원가입</span>
-        </div>
-        <div className="social-grid">
-          {socialProviders.map((provider) => (
-            <button
-              key={provider.name}
-              type="button"
-              className={`social-btn social-${provider.name}`}
-              style={{ '--accent': provider.accent } as CSSProperties}
-            >
-              <span className="dot" aria-hidden />
-              {provider.label.replace('로그인', '회원가입')}
-            </button>
-          ))}
-        </div>
-        <div className="other-methods">
-          <p>다른 방법으로 회원가입</p>
-          <div className="icon-row" aria-hidden>
-            <span className="icon">G</span>
-            <span className="icon">휴</span>
-            <span className="icon">E</span>
+      {step === 'verify' ? (
+        <div className="stack gap-sm">
+          <div className="banner">
+            <p className="banner__eyebrow">간편 인증</p>
+            <strong>휴대폰 또는 이메일로 빠르게 본인 확인 후 회원가입을 진행하세요.</strong>
+            <p className="banner__desc">아이핀 없이도 보안이 유지되는 두 가지 인증 방식을 제공합니다.</p>
           </div>
+
+          <div className="verification-grid">
+            <VerificationCard
+              title="휴대폰 본인인증"
+              description="본인 명의 휴대폰으로 인증번호를 받아 확인합니다."
+              accent="phone"
+              onNext={() => onChangeStep('details')}
+            />
+            <VerificationCard
+              title="이메일 본인인증"
+              description="이메일로 전달된 코드를 입력해 신원을 확인합니다."
+              accent="mail"
+              onNext={() => onChangeStep('details')}
+            />
+          </div>
+
+          <ul className="note-list">
+            <li>만 14세 미만은 보호자 동의가 필요합니다.</li>
+            <li>인증이 어려울 경우 고객센터로 문의하거나 다른 인증 수단을 선택해주세요.</li>
+          </ul>
         </div>
-      </div>
+      ) : (
+        <div className="stack gap-sm" aria-live="polite">
+          <div className="detail-header">
+            <p className="badge">STEP 2</p>
+            <div>
+              <p className="detail-title">계정 정보 입력</p>
+              <p className="detail-desc">인증 후 전달될 핵심 정보만 먼저 준비했습니다.</p>
+            </div>
+            <button type="button" className="text-link" onClick={() => onChangeStep('verify')}>
+              인증 단계로 돌아가기
+            </button>
+          </div>
+
+          <form className="form" onSubmit={(event) => event.preventDefault()}>
+            <label className="field">
+              <span className="field__label">아이디</span>
+              <input type="text" placeholder="영문 또는 이메일" autoComplete="username" />
+            </label>
+            <label className="field">
+              <span className="field__label">비밀번호</span>
+              <input type="password" placeholder="8자 이상, 영문/숫자 조합" autoComplete="new-password" />
+            </label>
+            <label className="field">
+              <span className="field__label">비밀번호 확인</span>
+              <input type="password" placeholder="비밀번호를 한 번 더 입력" autoComplete="new-password" />
+            </label>
+            <div className="placeholder-rows" aria-hidden>
+              <div className="placeholder" />
+              <div className="placeholder" />
+            </div>
+            <button type="submit" className="primary-btn">
+              가입 정보 임시 저장
+            </button>
+          </form>
+        </div>
+      )}
     </div>
+  );
+}
+
+function VerificationCard({
+  title,
+  description,
+  accent,
+  onNext,
+}: {
+  title: string;
+  description: string;
+  accent: 'phone' | 'mail';
+  onNext: () => void;
+}) {
+  return (
+    <article className={`verification-card ${accent}`}>
+      <div className="card-icon" aria-hidden>
+        {accent === 'phone' ? '📱' : '✉️'}
+      </div>
+      <div className="card-body">
+        <p className="card-title">{title}</p>
+        <p className="card-desc">{description}</p>
+        <button type="button" className="primary-btn" onClick={onNext}>
+          인증 진행하기
+        </button>
+      </div>
+    </article>
   );
 }
 
