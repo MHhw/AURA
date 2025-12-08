@@ -326,7 +326,9 @@ body {
 }
 
 .social-btn {
-  width: 100%;
+  width: auto;
+  min-width: 0;
+  flex: 1 1 0;
   padding: 0.85rem 1rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -352,14 +354,31 @@ body {
 .social-btn.social-google {
   color: #0f172a;
   background: #ffffff;
+  border-color: #e5e7eb;
 }
 
 .social-btn.social-kakao {
+  background: #fee500;
   color: #1f2937;
+  border-color: #e4c900;
 }
 
 .social-btn.social-naver {
-  color: #0b2d16;
+  background: #03c75a;
+  color: #e8fff1;
+  border-color: #02a94d;
+}
+
+.social-btn.social-recover-id {
+  background: linear-gradient(135deg, #c084fc, #7c3aed);
+  color: #f8fafc;
+  border-color: rgba(124, 58, 237, 0.7);
+}
+
+.social-btn.social-recover-password {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #f0f9ff;
+  border-color: rgba(14, 165, 233, 0.8);
 }
 
 .social-btn:hover {
