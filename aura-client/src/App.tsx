@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import httpClient from './lib/httpClient';
 import './App.css';
+import backgroundVideo from '../background.mp4';
 
 type Note = {
   id: number;
@@ -174,6 +175,12 @@ function App() {
   if (!authUser) {
     return (
       <div className="App auth">
+        <div className="auth-background">
+          <video className="auth-background__video" autoPlay loop muted playsInline>
+            <source src={backgroundVideo} type="video/mp4" />
+          </video>
+          <div className="auth-background__overlay" />
+        </div>
         <div className="panel">
           <h1 className="title">AURA</h1>
           <p className="subtitle">메모 앱을 이용하려면 로그인 또는 회원가입을 진행하세요.</p>
