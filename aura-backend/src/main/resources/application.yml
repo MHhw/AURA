@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/AURA
-    username: AURA
-    password: AURA
+    url: jdbc:postgresql://localhost:5432/aura
+    username: aura
+    password: aura
     driver-class-name: org.postgresql.Driver
   application:
     name: backend
