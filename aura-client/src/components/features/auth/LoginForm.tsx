@@ -33,9 +33,10 @@ export default function LoginForm({ socialProviders, recoveryProviders, onNaviga
         if (!form.identifier.trim()) nextErrors.identifier = '아이디 또는 이메일을 입력하세요.';
         if (!form.password.trim()) {
             nextErrors.password = '비밀번호를 입력하세요.';
-        } else if (form.password.length < 8) {
-            nextErrors.password = '비밀번호는 8자 이상이어야 합니다.';
         }
+        // else if (form.password.length < 8) {
+        //     nextErrors.password = '비밀번호는 8자 이상이어야 합니다.';
+        // }
 
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
