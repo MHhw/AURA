@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import './App.css';
-import { useRouteMode, Mode } from './hooks/useRouteMode';
+import { useRouteMode, Mode } from './common/hooks/useRouteMode';
 
 // 분리한 컴포넌트들 불러오기
-import LoginForm, { SocialProvider } from './components/features/auth/LoginForm';
-import RegisterPanel from './components/features/auth/RegisterPanel';
-import RecoveryPanel from './components/features/auth/RecoveryPanel';
+import LoginForm, { SocialProvider } from './features/auth/components/LoginForm';
+import RegisterPanel from './features/auth/components/RegisterPanel';
+import RecoveryPanel from './features/auth/components/RecoveryPanel';
 
 export default function App() {
   const [mode, navigate] = useRouteMode();

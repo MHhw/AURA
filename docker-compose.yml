@@ -1,0 +1,46 @@
+services:
+  # 1. 데이터베이스 (PostgreSQL)
+  db:
+    image: postgres:15
+    container_name: aura-db
+    environment:
+      POSTGRES_DB: aura         # (변경) 바보가 원하는 DB 이름
+      POSTGRES_USER: aura       # (변경) 바보가 원하는 아이디
+      POSTGRES_PASSWORD: aura   # (변경) 바보가 원하는 비번
+    ports:
+      - "5433:5432"             # (중요!) 내 컴퓨터 5433 <-> 컨테이너 5432 (충돌 방지)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. 백엔드 (Spring Boot)
+  backend:
+    build: ./aura-backend
+    container_name: aura-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # 컨테이너끼리는 5432로 통신하므로 여기는 5432 그대로 둬야 함!
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/aura
+      SPRING_DATASOURCE_USERNAME: aura
+      SPRING_DATASOURCE_PASSWORD: aura
+    depends_on:
+      - db
+    volumes:
+      - ./aura-backend/src:/app/src
+
+  # 3. 프론트엔드 (React)
+  frontend:
+    build: ./aura-client
+    container_name: aura-client
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    volumes:
+      - ./aura-client/src:/app/src
+      - ./aura-client/vite.config.js:/app/vite.config.js
+
+volumes:
+  postgres_data:
