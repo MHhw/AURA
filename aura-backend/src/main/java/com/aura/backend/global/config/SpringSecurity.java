@@ -3,6 +3,8 @@ package com.aura.backend.global.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -42,6 +44,13 @@ public class SpringSecurity {
         // 모든 주소(/**)에 이 규칙을 적용할게요.
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        // BCrypt라는 아주 강력하고 유명한 암호화 알고리즘을 사용해요.
+        // 이 녀석은 암호화할 때마다 결과가 조금씩 달라서 해커들이 예측하기 힘들게 만들어요!
+        return new BCryptPasswordEncoder();
     }
 
 }

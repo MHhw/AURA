@@ -4,7 +4,7 @@ import type { FormError } from '../types/uiTypes'; // LoginForm에서 쓰는 것
 
 export default function useRegisterForm() {
     // 사용자가 화면에 입력할 4가지 빈칸의 초기 상태를 만들어요.
-    const [form, setForm] = useState({ email: '', displayName: '', password: '', confirmPassword: '' });
+    const [form, setForm] = useState({ email: '', name: '', password: '', confirmPassword: '' });
     
     // 입력 칸에 문제가 생겼을 때 (예: 비밀번호 틀림) 보여줄 에러 글씨들을 저장해요.
     const [errors, setErrors] = useState<FormError>({});
@@ -33,7 +33,7 @@ export default function useRegisterForm() {
         if (!form.email.trim()) nextErrors.email = '이메일을 입력하세요.';
         
         // 2. 닉네임 칸이 비어있으면 에러 바구니에 담아요.
-        if (!form.displayName.trim()) nextErrors.displayName = '닉네임을 입력하세요.';
+        if (!form.name.trim()) nextErrors.name = '닉네임을 입력하세요.';
         
         // 3. 비밀번호 칸이 비어있으면 담아요.
         if (!form.password.trim()) nextErrors.password = '비밀번호를 입력하세요.';
@@ -57,13 +57,22 @@ export default function useRegisterForm() {
             const response = await register({
                 email: form.email,
                 password: form.password,
-                displayName: form.displayName
+                name: form.name
             });
             // 택배가 잘 도착하고 응답이 오면 성공 메시지를 띄워요.
             setStatus(response.message ?? '회원가입에 성공했습니다.');
-        } catch (error) {
-            // 통신 중에 문제가 생기면 실패 메시지를 띄워요.
-            setStatus('회원가입에 실패했습니다. 다시 시도해주세요.');
+        } catch (error: any) {
+
+            const serverErrorMessage = error.response?.data?.message;
+
+            if (serverErrorMessage) {
+                // 이메일 또는 닉네임이 중복일 때
+                setStatus(serverErrorMessage);
+            }
+            else {
+                // 통신 중에 그 외 문제가 생기면 실패 메시지를 띄워요.
+                setStatus('회원가입에 실패했습니다. 다시 시도해주세요.');
+            }
         } finally {
             // 통신이 끝나면 (성공이든 실패든) 다시 버튼을 누를 수 있게 상태를 되돌려요.
             setIsSubmitting(false);

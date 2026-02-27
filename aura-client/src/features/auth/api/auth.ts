@@ -8,14 +8,14 @@ export type LoginRequest = {
 export type RegisterRequest = {
   email: string;
   password: string;
-  displayName: string;
+  name: string;
 };
 
 export type AuthResponse = {
   message?: string;
   token?: string;
   email?: string;
-  displayName?: string;
+  name?: string;
 };
 
 export async function login(payload: LoginRequest): Promise<AuthResponse> {

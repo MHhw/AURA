@@ -40,12 +40,12 @@ export default function RegisterPanel({ socialProviders, onNavigateLogin }: Prop
                     <input
                         type="text"
                         placeholder="사용할 이름"
-                        value={form.displayName}
-                        onChange={(e) => handleChange('displayName', e.target.value)}
-                        aria-invalid={Boolean(errors.displayName)}
+                        value={form.name}
+                        onChange={(e) => handleChange('name', e.target.value)}
+                        aria-invalid={Boolean(errors.name)}
                         autoComplete="off"
                     />
-                    {errors.displayName && <span className="field__error">{errors.displayName}</span>}
+                    {errors.name && <span className="field__error">{errors.name}</span>}
                 </label>
 
                 <label className="field">
@@ -103,12 +103,13 @@ export default function RegisterPanel({ socialProviders, onNavigateLogin }: Prop
                 </div>
             </div>
 
+            {/* 로그인 화면으로 넘어가는 버튼이에요. 
             <div className="divider" role="separator" aria-hidden><span>이미 계정이 있으신가요?</span></div>
             
-            {/* 로그인 화면으로 넘어가는 버튼이에요. */}
             <button type="button" className="secondary-btn" onClick={onNavigateLogin}>
                 로그인하러 가기
             </button>
+            */}
         </div>
     );
 }

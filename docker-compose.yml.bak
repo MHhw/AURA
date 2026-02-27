@@ -1,4 +1,4 @@
-services:
+﻿services:
   # 1. 데이터베이스 (PostgreSQL)
   db:
     image: postgres:15
@@ -12,6 +12,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # 2. 백엔드 (Spring Boot)
+  backend:
+    build: ./aura-backend
+    container_name: aura-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # 컨테이너끼리는 5432로 통신하므로 여기는 5432 그대로 둬야 함!
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/aura
+      SPRING_DATASOURCE_USERNAME: aura
+      SPRING_DATASOURCE_PASSWORD: aura
+    depends_on:
+      - db
+    volumes:
+      - ./aura-backend/src:/app/src
+      - ./aura-backend/build:/app/build
+
   # 3. 프론트엔드 (React)
   frontend:
     build: ./aura-client
@@ -20,9 +37,8 @@ services:
       - "5173:5173"
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - VITE_API_BASE_URL=http://host.docker.internal:8080
     depends_on:
-      - db
+      - backend
     volumes:
       - ./aura-client/src:/app/src
       - ./aura-client/vite.config.js:/app/vite.config.js

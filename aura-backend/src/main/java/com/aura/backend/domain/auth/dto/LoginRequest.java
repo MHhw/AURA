@@ -1,4 +1,4 @@
-package com.aura.backend.domain.auth;
+package com.aura.backend.domain.auth.dto;
 
 import lombok.*;
 
@@ -7,9 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthResponse {
+public class LoginRequest {
     private String message;
     private String token;
     private String email;
-    private String displayName;
+    private String name;
 }

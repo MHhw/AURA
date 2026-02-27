@@ -4,7 +4,7 @@ spring:
 
   # 데이터베이스 연결 설정 (Docker 내부가 아니라, Spring이 실행되는 시점 기준)
   datasource:
-    url: jdbc:postgresql://db:5432/aura
+    url: jdbc:postgresql://localhost:5432/aura
     username: aura
     password: aura
     driver-class-name: org.postgresql.Driver
